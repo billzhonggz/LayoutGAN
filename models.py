@@ -121,13 +121,27 @@ class Generator(nn.Module):
         return res
 
 
-class Discriminator(nn.Module):
+class RelationDiscriminator(nn.Module):
+    """The discriminator (in GAN)
+    Implementation of the relational based discriminator.
+    """
+
+    def __init__(self, n_gpu):
+        super(RelationDiscriminator, self).__init__()
+        self.n_gpu = n_gpu
+        pass
+
+    def forward(self, *input):
+        pass
+
+
+class WireframeDiscriminator(nn.Module):
     """The discriminator (in GAN)
     Implement the Wireframe Rendering discriminator.
     """
 
     def __init__(self, n_gpu):
-        super(Discriminator, self).__init__()
+        super(WireframeDiscriminator, self).__init__()
         self.n_gpu = n_gpu
         self.main = nn.Sequential(
 

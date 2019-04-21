@@ -87,9 +87,9 @@ def train_mnist():
     # TODO: train discriminator with real images.
     # TODO: randomly initialize layout.
 
-    netG = models.Generator(n_gpu, class_num=1, element_num=128, feature_size=3).to(device)
+    generator = models.Generator(n_gpu, class_num=1, element_num=128, feature_size=3).to(device)
 
-    print(netG)
+    print(generator)
 
 if __name__ == '__main__':
     train_mnist()
