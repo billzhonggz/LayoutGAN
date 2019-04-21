@@ -14,6 +14,8 @@ import torch
 import torch.utils.data
 import torchvision.datasets
 
+import models
+
 # Root directory for dataset.
 dataroot = "data"
 
@@ -34,6 +36,9 @@ beta1 = 0.5  # Not provided in the article.
 
 # Number of GPUs available. Use 0 for CPU mode.
 n_gpu = 1
+
+# GPU device
+device = torch.device("cuda:0" if (torch.cuda.is_available() and n_gpu > 0) else "cpu")
 
 
 # Handle dataset. Transform pixel images to point sets.
@@ -82,6 +87,9 @@ def train_mnist():
     # TODO: train discriminator with real images.
     # TODO: randomly initialize layout.
 
+    netG = models.Generator(n_gpu, class_num=1, element_num=128, feature_size=3).to(device)
+
+    print(netG)
 
 if __name__ == '__main__':
     train_mnist()
