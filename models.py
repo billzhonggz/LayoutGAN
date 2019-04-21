@@ -11,11 +11,16 @@ import torch.nn as nn
 class Generator(nn.Module):
     """The generator (in GAN)"""
 
-    def __init__(self, n_gpu):
+    def __init__(self, n_gpu, feature_size, class_num, element_num):
         super(Generator, self).__init__()
         self.n_gpu = n_gpu
         self.main = nn.Sequential(
             # Encoder: two fully connected layers, input layout Z.
+            nn.Linear(feature_size, feature_size * 2),  # Guessing? Why is a doubled size?
+            nn.BatchNorm1d(element_num),
+            nn.Linear(feature_size * 2, feature_size * 2 * 2),
+            nn.BatchNorm1d(element_num),
+            nn.Linear(feature_size * 2 * 2, feature_size * 2 * 2)
         )
 
     def forward(self, *input):
