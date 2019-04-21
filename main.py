@@ -75,10 +75,11 @@ def train_mnist():
     # Download MNIST dataset
     _ = torchvision.datasets.MNIST(root=dataroot, train=True, download=True, transform=None)
 
-    # Load MNIST dataset
-    train_data = MnistLayoutDataset(dataroot)
-    train_data_loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size)
+    # Load MNIST dataset with layout processed.
+    train_mnist_layout = MnistLayoutDataset(dataroot)
+    train_mnist_layout_loader = torch.utils.data.DataLoader(train_mnist_layout, batch_size=batch_size)
 
+    # TODO: train discriminator with real images.
     # TODO: randomly initialize layout.
 
 
