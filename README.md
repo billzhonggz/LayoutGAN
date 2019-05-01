@@ -2,6 +2,8 @@
 
 A reproducing project of article [LayoutGAN: Generating Graphic Layouts with Wireframe Discriminators](https://arxiv.org/abs/1901.06767).
 
+Check out my [testing notes](NOTES.md)!
+
 ## Todo
 
 - [x] Implement the LayoutGAN fully follow the reference repo.
