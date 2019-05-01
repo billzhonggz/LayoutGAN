@@ -91,5 +91,6 @@ def train_mnist():
 
     print(generator)
 
+
 if __name__ == '__main__':
     train_mnist()

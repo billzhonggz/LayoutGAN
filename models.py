@@ -45,6 +45,9 @@ class Generator(nn.Module):
     def __init__(self, n_gpu, feature_size, class_num, element_num):
         super(Generator, self).__init__()
         self.n_gpu = n_gpu
+        self.feature_size = feature_size
+        self.class_num = class_num
+        self.element_num = element_num
 
         # Encoder: two fully connected layers, input layout Z.
         self.encoder_fc1 = nn.Linear(feature_size, feature_size * 2)  # Guessing? Why is a doubled size?
@@ -126,13 +129,109 @@ class RelationDiscriminator(nn.Module):
     Implementation of the relational based discriminator.
     """
 
-    def __init__(self, n_gpu):
+    def __init__(self, n_gpu, feature_size, class_num, element_num):
         super(RelationDiscriminator, self).__init__()
         self.n_gpu = n_gpu
-        pass
+        self.feature_size = feature_size
+        self.element_num = element_num
 
-    def forward(self, *input):
-        pass
+        # Encoder: two fully connected layers, input layout Z.
+        self.encoder_fc1 = nn.Linear(feature_size, feature_size * 2)  # Guessing? Why is a doubled size?
+        self.encoder_batch_norm1 = nn.BatchNorm1d(element_num)
+        self.encoder_fc2 = nn.Linear(feature_size * 2, feature_size * 2 * 2)
+        self.encoder_batch_norm2 = nn.BatchNorm1d(element_num)
+        self.encoder_fc3 = nn.Linear(feature_size * 2 * 2, feature_size * 2 * 2)
+
+        # Relation model 1
+        self.relation1_unary = nn.Linear(feature_size * 2 * 2,
+                                         feature_size * 2 * 2)  # Unary function U, from "Non-local Neural Network"
+        self.relation1_psi = torch.FloatTensor(torch.rand(1))  # \psi
+        self.relation1_phi = torch.FloatTensor(torch.rand(1))  # \phi
+        self.relation1_wr = torch.FloatTensor(torch.rand(1))  # W_r
+
+        # Relation model 2
+        self.relation2_unary = nn.Linear(feature_size * 2 * 2,
+                                         feature_size * 2 * 2)  # Unary function U, from "Non-local Neural Network"
+        self.relation2_psi = torch.FloatTensor(torch.rand(1))  # \psi
+        self.relation2_phi = torch.FloatTensor(torch.rand(1))  # \phi
+        self.relation2_wr = torch.FloatTensor(torch.rand(1))  # W_r
+
+        # Relation model 3
+        self.relation3_unary = nn.Linear(feature_size * 2 * 2,
+                                         feature_size * 2 * 2)  # Unary function U, from "Non-local Neural Network"
+        self.relation3_psi = torch.FloatTensor(torch.rand(1))  # \psi
+        self.relation3_phi = torch.FloatTensor(torch.rand(1))  # \phi
+        self.relation3_wr = torch.FloatTensor(torch.rand(1))  # W_r
+
+        # Relation model 4
+        self.relation4_unary = nn.Linear(feature_size * 2 * 2,
+                                         feature_size * 2 * 2)  # Unary function U, from "Non-local Neural Network"
+        self.relation4_psi = torch.FloatTensor(torch.rand(1))  # \psi
+        self.relation4_phi = torch.FloatTensor(torch.rand(1))  # \phi
+        self.relation4_wr = torch.FloatTensor(torch.rand(1))  # W_r
+
+        # Decoder, two fully connected layers.
+        self.decoder_fc1 = nn.Linear(feature_size * 2 * 2, feature_size * 2)
+        self.decoder_batch_norm1 = nn.BatchNorm1d(element_num)
+        self.decoder_fc2 = nn.Linear(feature_size * 2, feature_size)
+
+        # Branch
+        self.branch_fc1 = nn.Linear(feature_size, class_num)
+        self.branch_fc2 = nn.Linear(feature_size, feature_size - class_num)
+
+        # Max pooling
+        self.max_pooling_layer = nn.MaxPool1d(element_num, stride=2)
+
+        # Logits
+        self.logits = nn.Linear(feature_size, 1)
+
+    def forward(self, input):
+        # Encoder
+        out = function.relu(self.encoder_batch_norm1(self.encoder_fc1(input)))
+        out = function.relu(self.encoder_batch_norm2(self.encoder_fc2(out)))
+        encoded = function.sigmoid(self.encoder_fc3(out))
+
+        # Stacked relation module
+        relation_residual_1 = relation_module(encoded, self.relation1_unary, self.relation1_psi,
+                                              self.relation1_phi, self.relation1_wr)
+        relation_residual_2 = relation_module(relation_residual_1, self.relation2_unary, self.relation2_psi,
+                                              self.relation2_phi, self.relation2_wr)
+        relation_residual_3 = relation_module(relation_residual_2, self.relation3_unary, self.relation3_psi,
+                                              self.relation3_phi, self.relation3_wr)
+        relation_residual_4 = relation_module(relation_residual_3, self.relation4_unary, self.relation4_psi,
+                                              self.relation4_phi, self.relation4_wr)
+
+        # Decoder
+        out = function.relu(self.decoder_batch_norm1(self.decoder_fc1(relation_residual_4)))
+        out = function.relu(self.decoder_fc2(out))
+
+        # Branch
+        syn_cls = self.branch_fc1(out)
+        syn_geo = self.branch_fc2(out)
+
+        # Synthesized layout
+        res = torch.cat((syn_cls, syn_geo), 2)
+
+        # Max pooling
+        p_res = self.max_pooling(res, self.max_pooling_layer)
+
+        # Logits
+        p_red = function.sigmoid(self.logits(p_res))
+
+        pts('p_red', p_red)
+        return p_red
+
+    def max_pooling(self, out, mp):
+        batch_res = []
+        for bdx, batch in enumerate(out):
+            ns = []
+            for i in range(self.feature_size):
+                ns.append(batch[:, i:i + 1].sqeeze())
+            ns = torch.stack(ns)
+            ns = ns.view(1, self.feature_size, self.element_num)
+            batch_res.append(mp(ns).sqeeze())
+        res = torch.stack(batch_res).view(-1, self.feature_size)
+        return res
 
 
 class WireframeDiscriminator(nn.Module):
