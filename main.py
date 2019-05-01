@@ -11,6 +11,8 @@ import os
 import random
 import numpy as np
 import torch
+import torch.nn as nn
+import torch.optim as optim
 import torch.utils.data
 import torchvision.datasets
 
@@ -21,18 +23,6 @@ dataroot = "data"
 
 # Number of workers for dataloader
 workers = 2
-
-# Batch size during training
-batch_size = 128
-
-# Number of training epochs
-num_epochs = 40  # Not provided in the article.
-
-# Leaning rate for optimizers
-learning_rate = 0.00002
-
-# Beta1 hyperparameter for Adam optimizers (check the theory).
-beta1 = 0.5  # Not provided in the article.
 
 # Number of GPUs available. Use 0 for CPU mode.
 n_gpu = 1
@@ -76,7 +66,43 @@ class MnistLayoutDataset(torch.utils.data.Dataset):
         return len(self.train_data)
 
 
+def real_loss(D_out, smooth=False):
+    """Loss function from the discriminator to the generator (when result is real)."""
+    labels = None
+    batch_size = D_out.size(0)
+    if smooth:
+        labels = torch.ones(batch_size) * 0.9
+    else:
+        labels = torch.ones(batch_size)
+    crit = nn.BCEWithLogitsLoss()
+    loss = crit(D_out.squeeze(), labels)
+    return loss
+
+
+def fake_loss(D_out):
+    """Loss function from the discriminator to the generator (when result is fake)."""
+    batch_size = D_out.size(0)
+    labels = torch.zeros(batch_size)
+    crit = nn.BCEWithLogitsLoss()
+    loss = crit(D_out.squeeze(), labels)
+    return loss
+
+
 def train_mnist():
+    # Batch size during training
+    batch_size = 128
+    # Number of classes
+    cls_num = 1
+    # Number of geometry parameter
+    geo_num = 2
+    # Number of training epochs
+    num_epochs = 40  # Not provided in the article.
+    # Leaning rate for optimizers
+    learning_rate = 0.00002
+    # Beta1/2 hyperparameter for Adam optimizers (check the theory).
+    beta1 = 1.0  # Not provided in the article.
+    beta2 = 1.0
+
     # Download MNIST dataset
     _ = torchvision.datasets.MNIST(root=dataroot, train=True, download=True, transform=None)
 
@@ -84,12 +110,68 @@ def train_mnist():
     train_mnist_layout = MnistLayoutDataset(dataroot)
     train_mnist_layout_loader = torch.utils.data.DataLoader(train_mnist_layout, batch_size=batch_size)
 
-    # TODO: train discriminator with real images.
-    # TODO: randomly initialize layout.
-
+    # Initialize the generator and discriminator.
     generator = models.Generator(n_gpu, class_num=1, element_num=128, feature_size=3).to(device)
+    discriminator = models.RelationDiscriminator(n_gpu, class_num=1, element_num=128, feature_size=3).to(device)
+    print(generator)  # Check information of the generator.
+    print(discriminator)  # Check information of the discriminator.
 
-    print(generator)
+    # Initialize optimizers for models.
+    generator_optimizer = optim.Adam(generator.parameters(), learning_rate)
+    discriminator_optimizer = optim.Adam(discriminator.parameters(), learning_rate)
+
+    # Initialize training parameters.
+    generator.train()
+    discriminator.train()
+
+    # Start training.
+    for epoch in range(num_epochs):
+        for batch_i, real_images in enumerate(train_mnist_layout_loader):
+            batch_size = real_images.size(0)
+
+            # Train discriminator
+            discriminator_optimizer.zero_grad()
+            discriminator_real = discriminator(real_images)
+            discriminator_real_loss = real_loss(discriminator_real, False)
+
+            # TODO: Fix errors in random layout.
+            zlist = []
+            for i in range(batch_size):
+                cls_z = np.ones((batch_size, cls_num))
+                geo_z = np.random.normal(0, 1, size=(batch_size, geo_num))
+
+                z = torch.FloatTensor(np.concatenate((cls_z, geo_z), axis=1))
+                zlist.append(z)
+
+            fake_images = generator(torch.stack(zlist))
+
+            discriminator_fake = discriminator(fake_images)
+            discriminator_fake_loss = fake_loss(discriminator_fake)
+
+            discriminator_loss = discriminator_real_loss + discriminator_fake_loss
+            discriminator_loss.backward()
+            discriminator_optimizer.step()
+
+            # Train generator
+            generator_optimizer.zero_grad()
+
+            # TODO: Fix errors in random layout.
+            zlist2 = []
+            for i in range(batch_size):
+                cls_z = np.ones((batch_size, cls_num))
+                geo_z = np.random.normal(0, 1, size=(batch_size, geo_num))
+
+                z = torch.FloatTensor(np.concatenate((cls_z, geo_z), axis=1))
+                zlist2.append(z)
+
+            fake_images2 = generator(torch.stack(zlist2))
+            discriminator_fake = discriminator(fake_images2)
+            generator_loss = real_loss(discriminator_fake, False)
+
+            print('Epoch [{:5d}/{:5d}] | discriminator_loss: {:6.4f} | generator_loss: {:6.4f}'.format(epoch + 1,
+                                                                                                       num_epochs,
+                                                                                                       discriminator_loss.item(),
+                                                                                                       generator_loss.item()))
 
 
 if __name__ == '__main__':
