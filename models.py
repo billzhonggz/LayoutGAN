@@ -59,30 +59,30 @@ class Generator(nn.Module):
         # Relation model 1
         self.relation1_unary = nn.Linear(feature_size * 2 * 2,
                                          feature_size * 2 * 2)  # Unary function U, from "Non-local Neural Network"
-        self.relation1_psi = torch.FloatTensor(torch.rand(1))  # \psi
-        self.relation1_phi = torch.FloatTensor(torch.rand(1))  # \phi
-        self.relation1_wr = torch.FloatTensor(torch.rand(1))  # W_r
+        self.relation1_psi = torch.Tensor(torch.rand(1))  # \psi
+        self.relation1_phi = torch.Tensor(torch.rand(1))  # \phi
+        self.relation1_wr = torch.Tensor(torch.rand(1))  # W_r
 
         # Relation model 2
         self.relation2_unary = nn.Linear(feature_size * 2 * 2,
                                          feature_size * 2 * 2)  # Unary function U, from "Non-local Neural Network"
-        self.relation2_psi = torch.FloatTensor(torch.rand(1))  # \psi
-        self.relation2_phi = torch.FloatTensor(torch.rand(1))  # \phi
-        self.relation2_wr = torch.FloatTensor(torch.rand(1))  # W_r
+        self.relation2_psi = torch.Tensor(torch.rand(1))  # \psi
+        self.relation2_phi = torch.Tensor(torch.rand(1))  # \phi
+        self.relation2_wr = torch.Tensor(torch.rand(1))  # W_r
 
         # Relation model 3
         self.relation3_unary = nn.Linear(feature_size * 2 * 2,
                                          feature_size * 2 * 2)  # Unary function U, from "Non-local Neural Network"
-        self.relation3_psi = torch.FloatTensor(torch.rand(1))  # \psi
-        self.relation3_phi = torch.FloatTensor(torch.rand(1))  # \phi
-        self.relation3_wr = torch.FloatTensor(torch.rand(1))  # W_r
+        self.relation3_psi = torch.Tensor(torch.rand(1))  # \psi
+        self.relation3_phi = torch.Tensor(torch.rand(1))  # \phi
+        self.relation3_wr = torch.Tensor(torch.rand(1))  # W_r
 
         # Relation model 4
         self.relation4_unary = nn.Linear(feature_size * 2 * 2,
                                          feature_size * 2 * 2)  # Unary function U, from "Non-local Neural Network"
-        self.relation4_psi = torch.FloatTensor(torch.rand(1))  # \psi
-        self.relation4_phi = torch.FloatTensor(torch.rand(1))  # \phi
-        self.relation4_wr = torch.FloatTensor(torch.rand(1))  # W_r
+        self.relation4_psi = torch.Tensor(torch.rand(1))  # \psi
+        self.relation4_phi = torch.Tensor(torch.rand(1))  # \phi
+        self.relation4_wr = torch.Tensor(torch.rand(1))  # W_r
 
         # Decoder, two fully connected layers.
         self.decoder_fc1 = nn.Linear(feature_size * 2 * 2, feature_size * 2)
@@ -145,30 +145,30 @@ class RelationDiscriminator(nn.Module):
         # Relation model 1
         self.relation1_unary = nn.Linear(feature_size * 2 * 2,
                                          feature_size * 2 * 2)  # Unary function U, from "Non-local Neural Network"
-        self.relation1_psi = torch.FloatTensor(torch.rand(1))  # \psi
-        self.relation1_phi = torch.FloatTensor(torch.rand(1))  # \phi
-        self.relation1_wr = torch.FloatTensor(torch.rand(1))  # W_r
+        self.relation1_psi = torch.Tensor(torch.rand(1))  # \psi
+        self.relation1_phi = torch.Tensor(torch.rand(1))  # \phi
+        self.relation1_wr = torch.Tensor(torch.rand(1))  # W_r
 
         # Relation model 2
         self.relation2_unary = nn.Linear(feature_size * 2 * 2,
                                          feature_size * 2 * 2)  # Unary function U, from "Non-local Neural Network"
-        self.relation2_psi = torch.FloatTensor(torch.rand(1))  # \psi
-        self.relation2_phi = torch.FloatTensor(torch.rand(1))  # \phi
-        self.relation2_wr = torch.FloatTensor(torch.rand(1))  # W_r
+        self.relation2_psi = torch.Tensor(torch.rand(1))  # \psi
+        self.relation2_phi = torch.Tensor(torch.rand(1))  # \phi
+        self.relation2_wr = torch.Tensor(torch.rand(1))  # W_r
 
         # Relation model 3
         self.relation3_unary = nn.Linear(feature_size * 2 * 2,
                                          feature_size * 2 * 2)  # Unary function U, from "Non-local Neural Network"
-        self.relation3_psi = torch.FloatTensor(torch.rand(1))  # \psi
-        self.relation3_phi = torch.FloatTensor(torch.rand(1))  # \phi
-        self.relation3_wr = torch.FloatTensor(torch.rand(1))  # W_r
+        self.relation3_psi = torch.Tensor(torch.rand(1))  # \psi
+        self.relation3_phi = torch.Tensor(torch.rand(1))  # \phi
+        self.relation3_wr = torch.Tensor(torch.rand(1))  # W_r
 
         # Relation model 4
         self.relation4_unary = nn.Linear(feature_size * 2 * 2,
                                          feature_size * 2 * 2)  # Unary function U, from "Non-local Neural Network"
-        self.relation4_psi = torch.FloatTensor(torch.rand(1))  # \psi
-        self.relation4_phi = torch.FloatTensor(torch.rand(1))  # \phi
-        self.relation4_wr = torch.FloatTensor(torch.rand(1))  # W_r
+        self.relation4_psi = torch.Tensor(torch.rand(1))  # \psi
+        self.relation4_phi = torch.Tensor(torch.rand(1))  # \phi
+        self.relation4_wr = torch.Tensor(torch.rand(1))  # W_r
 
         # Decoder, two fully connected layers.
         self.decoder_fc1 = nn.Linear(feature_size * 2 * 2, feature_size * 2)

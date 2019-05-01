@@ -24,14 +24,7 @@ dataroot = "data"
 # Number of workers for dataloader
 workers = 2
 
-# Number of GPUs available. Use 0 for CPU mode.
-n_gpu = 1
 
-# GPU device
-device = torch.device("cuda:0" if (torch.cuda.is_available() and n_gpu > 0) else "cpu")
-
-
-# Handle dataset. Transform pixel images to point sets.
 class MnistLayoutDataset(torch.utils.data.Dataset):
     """MNIST dataset and create torch dataset object."""
 
@@ -39,7 +32,8 @@ class MnistLayoutDataset(torch.utils.data.Dataset):
         super(MnistLayoutDataset, self).__init__()
         self.train_data = torch.load(path + "/MNIST/processed/training.pt")[0]
         self.element_num = element_num
-        self.gt_thresh = gt_thresh  # Guess: a threshold (阈值) to indicate this pixel is lighted (0-255).
+        # Guess: a threshold (阈值) to indicate this pixel is lighted (0-255).
+        self.gt_thresh = gt_thresh
 
     def __getitem__(self, index):
         """Extract layout features from images."""
@@ -48,9 +42,11 @@ class MnistLayoutDataset(torch.utils.data.Dataset):
 
         for id, i in enumerate(img):
             for jd, j in enumerate(i):
-                if j >= self.gt_thresh:  # If the current grayscale value is larger than the threshold, note this point.
+                # If the current grayscale value is larger than the threshold, note this point.
+                if j >= self.gt_thresh:
                     # Create the layout element.
-                    gt_values.append(torch.FloatTensor([1, np.float32(2 * id + 1) / 56, np.float32(2 * jd + 1) / 56]))
+                    gt_values.append(torch.Tensor(
+                        [1, np.float32(2 * id + 1) / 56, np.float32(2 * jd + 1) / 56]))
 
         graph_elements = []
 
@@ -89,8 +85,13 @@ def fake_loss(D_out):
 
 
 def train_mnist():
+    # Number of GPUs available. Use 0 for CPU mode.
+    n_gpu = 1
+    # GPU device
+    device = torch.device("cuda:0" if (
+        torch.cuda.is_available() and n_gpu > 0) else "cpu")
     # Batch size during training
-    batch_size = 128
+    batch_size = 40
     # Number of classes
     cls_num = 1
     # Number of geometry parameter
@@ -104,22 +105,27 @@ def train_mnist():
     beta2 = 1.0
 
     # Download MNIST dataset
-    _ = torchvision.datasets.MNIST(root=dataroot, train=True, download=True, transform=None)
+    _ = torchvision.datasets.MNIST(
+        root=dataroot, train=True, download=True, transform=None)
 
     # Load MNIST dataset with layout processed.
     train_mnist_layout = MnistLayoutDataset(dataroot)
-    train_mnist_layout_loader = torch.utils.data.DataLoader(train_mnist_layout, batch_size=batch_size)
+    train_mnist_layout_loader = torch.utils.data.DataLoader(
+        train_mnist_layout, batch_size=batch_size, num_workers=workers)
 
     # Initialize the generator and discriminator.
-    generator = models.Generator(n_gpu, class_num=1, element_num=128, feature_size=3).to(device)
-    discriminator = models.RelationDiscriminator(n_gpu, class_num=1, element_num=128, feature_size=3).to(device)
+    generator = models.Generator(
+        n_gpu, class_num=1, element_num=128, feature_size=3).to(device).cuda()
+    discriminator = models.RelationDiscriminator(
+        n_gpu, class_num=1, element_num=128, feature_size=3).to(device).cuda()
     print(generator)  # Check information of the generator.
     print(discriminator)  # Check information of the discriminator.
 
     # Initialize optimizers for models.
     print('Initialize optimizers.')
     generator_optimizer = optim.Adam(generator.parameters(), learning_rate)
-    discriminator_optimizer = optim.Adam(discriminator.parameters(), learning_rate)
+    discriminator_optimizer = optim.Adam(
+        discriminator.parameters(), learning_rate)
 
     # Initialize training parameters.
     print('Initialize traning.')
@@ -128,8 +134,10 @@ def train_mnist():
 
     # Start training.
     for epoch in range(num_epochs):
-        print('Start to train epoch %d.' % epoch + 1)
+        print('Start to train epoch %d.' % epoch)
         for batch_i, real_images in enumerate(train_mnist_layout_loader):
+
+            real_images = real_images.to(device)
             batch_size = real_images.size(0)
 
             # Train discriminator
@@ -143,7 +151,7 @@ def train_mnist():
                 cls_z = np.ones((batch_size, cls_num))
                 geo_z = np.random.normal(0, 1, size=(batch_size, geo_num))
 
-                z = torch.FloatTensor(np.concatenate((cls_z, geo_z), axis=1))
+                z = torch.Tensor(np.concatenate((cls_z, geo_z), axis=1))
                 zlist.append(z)
 
             fake_images = generator(torch.stack(zlist))
@@ -164,7 +172,7 @@ def train_mnist():
                 cls_z = np.ones((batch_size, cls_num))
                 geo_z = np.random.normal(0, 1, size=(batch_size, geo_num))
 
-                z = torch.FloatTensor(np.concatenate((cls_z, geo_z), axis=1))
+                z = torch.Tensor(np.concatenate((cls_z, geo_z), axis=1))
                 zlist2.append(z)
 
             fake_images2 = generator(torch.stack(zlist2))
@@ -178,4 +186,5 @@ def train_mnist():
 
 
 if __name__ == '__main__':
+    torch.set_default_tensor_type('torch.cuda.FloatTensor')
     train_mnist()
