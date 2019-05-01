@@ -97,7 +97,7 @@ class Generator(nn.Module):
         # Encoder
         out = function.relu(self.encoder_batch_norm1(self.encoder_fc1(input)))
         out = function.relu(self.encoder_batch_norm2(self.encoder_fc2(out)))
-        encoded = function.sigmoid(self.encoder_fc3(out))
+        encoded = torch.sigmoid(self.encoder_fc3(out))
 
         # Stacked relation module
         relation_residual_1 = relation_module(encoded, self.relation1_unary, self.relation1_psi,
@@ -189,7 +189,7 @@ class RelationDiscriminator(nn.Module):
         # Encoder
         out = function.relu(self.encoder_batch_norm1(self.encoder_fc1(input)))
         out = function.relu(self.encoder_batch_norm2(self.encoder_fc2(out)))
-        encoded = function.sigmoid(self.encoder_fc3(out))
+        encoded = torch.sigmoid(self.encoder_fc3(out))
 
         # Stacked relation module
         relation_residual_1 = relation_module(encoded, self.relation1_unary, self.relation1_psi,
