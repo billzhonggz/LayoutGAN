@@ -117,15 +117,18 @@ def train_mnist():
     print(discriminator)  # Check information of the discriminator.
 
     # Initialize optimizers for models.
+    print('Initialize optimizers.')
     generator_optimizer = optim.Adam(generator.parameters(), learning_rate)
     discriminator_optimizer = optim.Adam(discriminator.parameters(), learning_rate)
 
     # Initialize training parameters.
+    print('Initialize traning.')
     generator.train()
     discriminator.train()
 
     # Start training.
     for epoch in range(num_epochs):
+        print('Start to train epoch %d.' % epoch + 1)
         for batch_i, real_images in enumerate(train_mnist_layout_loader):
             batch_size = real_images.size(0)
 
