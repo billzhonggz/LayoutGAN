@@ -16,13 +16,8 @@ import torch.optim as optim
 import torch.utils.data
 import torchvision.datasets
 
+
 import models
-
-# Root directory for dataset.
-dataroot = "data"
-
-# Number of workers for dataloader
-workers = 2
 
 
 class MnistLayoutDataset(torch.utils.data.Dataset):
@@ -85,13 +80,17 @@ def fake_loss(D_out):
 
 
 def train_mnist():
+    # Root directory for dataset.
+    dataroot = "data"
+    # Number of workers for dataloader
+    workers = 8
     # Number of GPUs available. Use 0 for CPU mode.
     n_gpu = 1
     # GPU device
     device = torch.device("cuda:0" if (
         torch.cuda.is_available() and n_gpu > 0) else "cpu")
     # Batch size during training
-    batch_size = 40
+    batch_size = 10
     # Number of classes
     cls_num = 1
     # Number of geometry parameter
@@ -114,8 +113,10 @@ def train_mnist():
         train_mnist_layout, batch_size=batch_size, num_workers=workers)
 
     # Initialize the generator and discriminator.
+    # WARNING: according to reported exception from batch norm, element_num should equal to batch size.
     generator = models.Generator(
-        n_gpu, class_num=1, element_num=128, feature_size=3).to(device).cuda()
+        n_gpu, class_num=1, element_num=batch_size, feature_size=3).to(device).cuda()
+    # WARNING: element_num for discriminator remains as 128.
     discriminator = models.RelationDiscriminator(
         n_gpu, class_num=1, element_num=128, feature_size=3).to(device).cuda()
     print(generator)  # Check information of the generator.
@@ -137,13 +138,17 @@ def train_mnist():
         print('Start to train epoch %d.' % epoch)
         for batch_i, real_images in enumerate(train_mnist_layout_loader):
 
+            print('In batch {0} of epoch {1}.'.format(batch_i, epoch))
+
             real_images = real_images.to(device)
             batch_size = real_images.size(0)
 
             # Train discriminator
             discriminator_optimizer.zero_grad()
+            print('Start train discriminator with real images.')
             discriminator_real = discriminator(real_images)
             discriminator_real_loss = real_loss(discriminator_real, False)
+            print('Finish train discriminator with real images.')
 
             # TODO: Fix errors in random layout.
             zlist = []
@@ -156,6 +161,8 @@ def train_mnist():
 
             fake_images = generator(torch.stack(zlist))
 
+            # FIXME: The fake images has the element num equals to batch size.
+            # Consider to extract "element_num" parameter to other places.
             discriminator_fake = discriminator(fake_images)
             discriminator_fake_loss = fake_loss(discriminator_fake)
 
