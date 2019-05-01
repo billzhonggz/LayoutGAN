@@ -216,7 +216,7 @@ class RelationDiscriminator(nn.Module):
         p_res = self.max_pooling(res, self.max_pooling_layer)
 
         # Logits
-        p_red = function.sigmoid(self.logits(p_res))
+        p_red = torch.sigmoid(self.logits(p_res))
 
         pts('p_red', p_red)
         return p_red
@@ -226,10 +226,10 @@ class RelationDiscriminator(nn.Module):
         for bdx, batch in enumerate(out):
             ns = []
             for i in range(self.feature_size):
-                ns.append(batch[:, i:i + 1].sqeeze())
+                ns.append(batch[:, i:i + 1].squeeze())
             ns = torch.stack(ns)
             ns = ns.view(1, self.feature_size, self.element_num)
-            batch_res.append(mp(ns).sqeeze())
+            batch_res.append(mp(ns).squeeze())
         res = torch.stack(batch_res).view(-1, self.feature_size)
         return res
 
