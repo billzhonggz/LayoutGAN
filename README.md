@@ -2,6 +2,16 @@
 
 A reproducing project of article [LayoutGAN: Generating Graphic Layouts with Wireframe Discriminators](https://arxiv.org/abs/1901.06767).
 
+## Todo
+
+- [x] Implement the LayoutGAN fully follow the reference repo.
+- [ ] Start training, obverse the result.
+- [ ] (New branch) Modify the network with **two classes** (black & white points) on MNIST dataset.
+
+## Reference
+
+The implementation [here](https://github.com/sngjuk/LayoutGAN).
+
 ## Packages Used
 
 You need to install these packages before you run this program.
