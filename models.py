@@ -7,7 +7,7 @@ Copyright ©2019-current, Junru Zhong, All rights reserved.
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as function
+import torch.nn.functional as F
 
 import numpy as np
 
@@ -29,7 +29,7 @@ def relation_module(out, unary, psi, phi, wr):
             for jdx, j in enumerate(batch):
                 if idx == jdx:
                     continue
-                u = function.relu(unary(j))
+                u = F.relu(unary(j))
                 iv = i.view(i.size(0), 1)
                 jv = j.view(j.size(0), 1)
                 dot = (torch.mm((iv * psi).t(), jv * phi)).squeeze()
@@ -95,8 +95,8 @@ class Generator(nn.Module):
 
     def forward(self, input):
         # Encoder
-        out = function.relu(self.encoder_batch_norm1(self.encoder_fc1(input)))
-        out = function.relu(self.encoder_batch_norm2(self.encoder_fc2(out)))
+        out = F.relu(self.encoder_batch_norm1(self.encoder_fc1(input)))
+        out = F.relu(self.encoder_batch_norm2(self.encoder_fc2(out)))
         encoded = torch.sigmoid(self.encoder_fc3(out))
 
         # Stacked relation module
@@ -110,8 +110,8 @@ class Generator(nn.Module):
                                               self.relation4_phi, self.relation4_wr)
 
         # Decoder
-        out = function.relu(self.decoder_batch_norm1(self.decoder_fc1(relation_residual_4)))
-        out = function.relu(self.decoder_fc2(out))
+        out = F.relu(self.decoder_batch_norm1(self.decoder_fc1(relation_residual_4)))
+        out = F.relu(self.decoder_fc2(out))
 
         # Branch
         syn_cls = self.branch_fc1(out)
@@ -187,8 +187,8 @@ class RelationDiscriminator(nn.Module):
 
     def forward(self, input):
         # Encoder
-        out = function.relu(self.encoder_batch_norm1(self.encoder_fc1(input)))
-        out = function.relu(self.encoder_batch_norm2(self.encoder_fc2(out)))
+        out = F.relu(self.encoder_batch_norm1(self.encoder_fc1(input)))
+        out = F.relu(self.encoder_batch_norm2(self.encoder_fc2(out)))
         encoded = torch.sigmoid(self.encoder_fc3(out))
 
         # Stacked relation module
@@ -202,8 +202,8 @@ class RelationDiscriminator(nn.Module):
                                               self.relation4_phi, self.relation4_wr)
 
         # Decoder
-        out = function.relu(self.decoder_batch_norm1(self.decoder_fc1(relation_residual_4)))
-        out = function.relu(self.decoder_fc2(out))
+        out = F.relu(self.decoder_batch_norm1(self.decoder_fc1(relation_residual_4)))
+        out = F.relu(self.decoder_fc2(out))
 
         # Branch
         syn_cls = self.branch_fc1(out)
