@@ -83,14 +83,14 @@ def train_mnist():
     # Root directory for dataset.
     dataroot = "data"
     # Number of workers for dataloader
-    workers = 8
+    dataloader_workers = 8
     # Number of GPUs available. Use 0 for CPU mode.
     n_gpu = 1
     # GPU device
     device = torch.device("cuda:0" if (
         torch.cuda.is_available() and n_gpu > 0) else "cpu")
     # Batch size during training
-    batch_size = 10
+    batch_size = 15
     # Number of classes
     cls_num = 1
     # Number of geometry parameter
@@ -110,15 +110,15 @@ def train_mnist():
     # Load MNIST dataset with layout processed.
     train_mnist_layout = MnistLayoutDataset(dataroot)
     train_mnist_layout_loader = torch.utils.data.DataLoader(
-        train_mnist_layout, batch_size=batch_size, num_workers=workers)
+        train_mnist_layout, batch_size=batch_size, num_workers=dataloader_workers)
 
     # Initialize the generator and discriminator.
     # WARNING: according to reported exception from batch norm, element_num should equal to batch size.
     generator = models.Generator(
-        n_gpu, class_num=1, element_num=batch_size, feature_size=3).to(device).cuda()
+        n_gpu, class_num=cls_num, element_num=batch_size, feature_size=3).to(device).cuda()
     # WARNING: element_num for discriminator remains as 128.
     discriminator = models.RelationDiscriminator(
-        n_gpu, class_num=1, element_num=128, feature_size=3).to(device).cuda()
+        n_gpu, class_num=cls_num, element_num=128, feature_size=3).to(device).cuda()
     print(generator)  # Check information of the generator.
     print(discriminator)  # Check information of the discriminator.
 
@@ -151,6 +151,7 @@ def train_mnist():
             print('Finish train discriminator with real images.')
 
             # TODO: Fix errors in random layout.
+            # Size of the zlist does not equal to element number.
             zlist = []
             for i in range(batch_size):
                 cls_z = np.ones((batch_size, cls_num))
