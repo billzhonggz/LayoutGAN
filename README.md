@@ -19,5 +19,4 @@ The implementation [here](https://github.com/sngjuk/LayoutGAN).
 You need to install these packages before you run this program.
 
 * Python 3.7
-* Pytorch: [instructions](https://pytorch.org/get-started/)
-* VisualDL: [instructions](https://github.com/PaddlePaddle/VisualDL#quick-start)
+* Pytorch >= 1.1.0 (TensorBoard enabled): [instructions](https://pytorch.org/get-started/)

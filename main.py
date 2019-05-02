@@ -16,6 +16,8 @@ import torch.optim as optim
 import torch.utils.data
 import torchvision.datasets
 
+# from torch.utils.tensorboard import SummaryWriter
+
 
 import models
 
@@ -103,6 +105,9 @@ def train_mnist():
     beta1 = 1.0  # Not provided in the article.
     beta2 = 1.0
 
+    # TensorBoard
+    # writer = SummaryWriter()
+
     # Download MNIST dataset
     _ = torchvision.datasets.MNIST(
         root=dataroot, train=True, download=True, transform=None)
@@ -121,6 +126,10 @@ def train_mnist():
         n_gpu, class_num=cls_num, element_num=128, feature_size=3).to(device).cuda()
     print(generator)  # Check information of the generator.
     print(discriminator)  # Check information of the discriminator.
+
+    # Write models to TensorBoard
+    # writer.add_graph(generator)
+    # writer.add_graph(discriminator)
 
     # Initialize optimizers for models.
     print('Initialize optimizers.')
