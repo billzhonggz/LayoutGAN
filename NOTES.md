@@ -2,6 +2,16 @@
 
 Notes on testing the network.
 
+### May 8 2019 11:00 CST
+
+Commit `bd1f56e5da4471d836b3da6d18e7e86a3a198bc6`
+
+- Disable batch norm layers and max pooling layers.
+- Bypass the errors before.
+- A new error in loss passing:
+    - `Target size (torch.Size([15])) must be the same as input size (torch.Size([15, 128]))`
+    - On `main.py`, `real_loss` and `fake_loss` methods.
+
 ### May 1 2019 22:30 CST
 
 Commit `f7990a096dd61240d47e7ae382c9e4c920fc35a7`
