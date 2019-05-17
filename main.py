@@ -50,16 +50,29 @@ def transfer_greyscale_class(greyscale, thresh=200):
     else:
         return 0
 
-feature_size = 128 # TODO: change later.
+
+feature_size = 128  # TODO: change later.
+
+
+# The relation module.
+class RelationModule(layers.Layer):
+    """The relation module."""
+
+    def __init__(self):
+        super(RelationModule, self).__init__()
+        unary = layers.Dense(feature_size * 2 * 2, input_shape=(feature_size * 2 * 2,))
+        psi = self.add_weight(shape=())
+
 
 # The generator
 generator = models.Sequential()
-generator.add(models.Dense(feature_size * 2, input_shape=(feature_size,))) # models.Dense(output_shape, input_shape=?)
-generator.add(models.Dense(feature_size * 2 * 2))
-generator.add(models.Dense(feature_size * 2 * 2 * 2))
-
+generator.add(layers.Dense(feature_size * 2, input_shape=(feature_size,)))  # layers.Dense(output_shape, input_shape=?)
+generator.add(layers.Dense(feature_size * 2 * 2))
+generator.add(layers.Dense(feature_size * 2 * 2))
+generator.add(RelationModule)
 
 if __name__ == '__main__':
+    print(tf.keras.__version__)
     # Load training data.
     (train_images, train_labels), (test_images, test_labels) = datasets.mnist.load_data()
     train_images = train_images.reshape((60000, 28, 28, 1))
