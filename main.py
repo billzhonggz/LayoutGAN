@@ -22,9 +22,13 @@ def load_mnist():
     mnist_builder = tfds.builder('mnist')
     mnist_builder.download_and_prepare()
     # Transfer to TensorFlow `Dataset` object.
-    mnist_train = mnist_builder.as_dataset(split=tfds.Split.TRAIN)
-    print(mnist_train)
+    datasets = mnist_builder.as_dataset()
+    train_dataset = datasets['train']
+    print(isinstance(train_dataset, tf.data.Dataset))
     # Transfer MNIST images to tensors with geometry information in the iterator.
+    iterator = tf.compat.v1.data.make_one_shot_iterator(train_dataset)
+    # Get one element from the iterator.
+    element = iterator.get_next()['image']
 
 
 if __name__ == '__main__':
