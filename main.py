@@ -50,10 +50,13 @@ def transfer_greyscale_class(greyscale, thresh=200):
     else:
         return 0
 
+feature_size = 128 # TODO: change later.
 
 # The generator
 generator = models.Sequential()
-generator.add(layers)
+generator.add(models.Dense(feature_size * 2, input_shape=(feature_size,))) # models.Dense(output_shape, input_shape=?)
+generator.add(models.Dense(feature_size * 2 * 2))
+generator.add(models.Dense(feature_size * 2 * 2 * 2))
 
 
 if __name__ == '__main__':
