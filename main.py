@@ -9,10 +9,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import tensorflow as tf
 import numpy as np
 
-# In TensorFlow 2.0.0a0, using tensorflow.keras will stop code completion, use keras instead.
-# Change back to tensorflow.keras before run, I believe it just a problem in __init__.py file.
-from keras import datasets, layers, models
-from keras import backend as K
+# Modify the imports for IDE code completion.
+# Refer to https://github.com/tensorflow/tensorflow/issues/26813
+from tensorflow.python.keras import datasets, layers, models
+from tensorflow.python.keras import backend as K
 
 
 # Enable eager execution. Not necessary for TensorFlow 2.0+.
