@@ -128,17 +128,13 @@ class LayoutGAN:
         # Set up optimizer.
         self.optimizer = optimizers.Adam(self.learning_rate, self.beta1, self.beta2)
 
-        # TODO: Set up losses.
-        losses = [
-            'WeightedMSE'
-        ]
+        # Build the discriminators.
+        self.relational_discriminator = self.build_relational_discriminator()
+        self.relational_discriminator.compile(optimizer=self.optimizer, loss='WeightedMSE')
+        # self.wireframe_discriminator = self.build_wireframe_discriminator()
 
         # Build the generator.
         self.generator = self.build_generator()
-
-        # Build the discriminators.
-        self.relational_discriminator = self.build_relational_discriminator()
-        # self.wireframe_discriminator = self.build_wireframe_discriminator()
 
     def build_generator(self):
         feature_size = self.num_class + self.num_geometry_parameter
@@ -214,6 +210,8 @@ class LayoutGAN:
         layout_vectors = vfunction(train_images, 200)
 
         # TODO: Set up adversarial ground truth.
+        # Ground truth: the datasets; fake layouts: initialized according to the article.
+
 
         for epoch in range(epochs):
 
