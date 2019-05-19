@@ -124,6 +124,7 @@ class LayoutGAN:
         self.beta2 = 1
         self.num_class = 2  # For MNIST
         self.num_geometry_parameter = 2  # For MNIST
+        self.feature_size = self.num_class + self.num_geometry_parameter
 
         # Set up optimizer.
         self.optimizer = optimizers.Adam(self.learning_rate, self.beta1, self.beta2)
@@ -137,26 +138,25 @@ class LayoutGAN:
         self.generator = self.build_generator()
 
     def build_generator(self):
-        feature_size = self.num_class + self.num_geometry_parameter
 
         # The generator
         generator = models.Sequential()
 
         # Encoder fully connected layers.
-        generator.add(layers.Dense(feature_size * 2,
-                                   input_shape=(feature_size,)))
+        generator.add(layers.Dense(self.feature_size * 2,
+                                   input_shape=(self.feature_size,)))
         generator.add(layers.BatchNormalization())
-        generator.add(layers.Dense(feature_size * 2 * 2))
+        generator.add(layers.Dense(self.feature_size * 2 * 2))
         generator.add(layers.BatchNormalization())
         # Relation module.
         # TODO: Stack four relation modules when succeeded for one.
-        generator.add(layers.Dense(feature_size * 2 * 2))
+        generator.add(layers.Dense(self.feature_size * 2 * 2))
         generator.add(RelationModule(self.num_class,
                                      self.num_geometry_parameter, self.num_elements))
         # Decoder fully connected layers.
-        generator.add(layers.Dense(feature_size * 2))
+        generator.add(layers.Dense(self.feature_size * 2))
         generator.add(layers.BatchNormalization())
-        generator.add(layers.Dense(feature_size))
+        generator.add(layers.Dense(self.feature_size))
         # Branches
         generator.add(layers.Dense(self.num_class))
         generator.add(layers.Dense(self.num_geometry_parameter))
@@ -166,33 +166,32 @@ class LayoutGAN:
         return models.Model()
 
     def build_relational_discriminator(self):
-        feature_size = self.num_class + self.num_geometry_parameter
 
         # The relational discriminator
         relational_discriminator = models.Sequential()
 
         # Encoder fully connected layers.
         relational_discriminator.add(layers.Dense(
-            feature_size * 2, input_shape=(feature_size,)))
+            self.feature_size * 2, input_shape=(self.feature_size,)))
         relational_discriminator.add(layers.BatchNormalization())
-        relational_discriminator.add(layers.Dense(feature_size * 2 * 2))
+        relational_discriminator.add(layers.Dense(self.feature_size * 2 * 2))
         relational_discriminator.add(layers.BatchNormalization())
         # Relation module.
         # TODO: Stack four modules later.
-        relational_discriminator.add(layers.Dense(feature_size * 2 * 2))
+        relational_discriminator.add(layers.Dense(self.feature_size * 2 * 2))
         relational_discriminator.add(RelationModule(
             self.num_class, self.num_geometry_parameter, self.num_elements))
         # Decoder fully connected layers.
-        relational_discriminator.add(layers.Dense(feature_size * 2))
+        relational_discriminator.add(layers.Dense(self.feature_size * 2))
         relational_discriminator.add(layers.BatchNormalization())
-        relational_discriminator.add(layers.Dense(feature_size))
+        relational_discriminator.add(layers.Dense(self.feature_size))
         # Branches
         relational_discriminator.add(layers.Dense(self.num_class))
         relational_discriminator.add(layers.Dense(self.num_geometry_parameter))
         # Max pooling
         # relational_discriminator.add(layers.MaxPool1D(self.num_elements))
         # Logits
-        # relational_discriminator.add(layers.Dense(feature_size, activations='logits'))
+        # relational_discriminator.add(layers.Dense(self.feature_size, activations='logits'))
 
         print(relational_discriminator.summary())
 
@@ -209,9 +208,10 @@ class LayoutGAN:
         vfunction = np.vectorize(transfer_greyscale_class)
         layout_vectors = vfunction(train_images, 200)
 
-        # TODO: Set up adversarial ground truth.
+        # TODO: Set up placeholders for adversarial ground truth and fake result.
         # Ground truth: the datasets; fake layouts: initialized according to the article.
-
+        valid = np.ones((batch_size, self.feature_size))
+        fake = np.zeros((batch_size, self.feature_size))
 
         for epoch in range(epochs):
 
