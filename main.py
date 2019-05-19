@@ -1,6 +1,12 @@
 """Just another implementation on LayoutGAN.
 Use TensorFlow, TensorFlow-Graphics, and Keras
 
+TODO list:
+- [x] Create the generator.
+- [ ] Create the relational discriminator.
+- [ ] Set up the loss function.
+- [ ] Run one epoch of training to test the code.
+
 Copyright ©2019-current, Junru Zhong, all rights reserved.
 """
 
@@ -11,7 +17,7 @@ import numpy as np
 
 # Modify the imports for IDE code completion.
 # Refer to https://github.com/tensorflow/tensorflow/issues/26813
-from tensorflow.python.keras import datasets, layers, models
+from tensorflow.python.keras import datasets, layers, models, activations
 from tensorflow.python.keras import backend as K
 
 
@@ -74,8 +80,9 @@ class RelationModule(layers.Layer):
         self.w_r = K.placeholder(shape=[self.feature_size, self.feature_size])
         self.w_psi = layers.Dense(self.feature_size)
         self.w_phi = layers.Dense(self.feature_size)
+        self.unary = layers.Dense(self.feature_size)
 
-        super(RelationModule, self).__init__()
+        super(RelationModule, self).__init__(dynamic=True)
 
     def call(self, inputs, **kwargs):
         """Forward computations
@@ -83,7 +90,22 @@ class RelationModule(layers.Layer):
         H: a dot-product to compute a scalar value on the representations of element i and j.
         Output = W_r\frac{1}{N}\sum_{\forall{j \neq i}}^{} H(f(p_i,\theta_i),f(p_j,\theta_j))U(f(p_j,\theta_j))+f(p_i, \theta_i)
         """
-        pass
+        # This calculation is for a single pair.
+        # TODO: Verify and add/not to add the batch loop.
+        # TODO: Verify the structure of input tensors.
+        f_prime = []
+        for idx, i in enumerate(inputs):
+            self_attention = K.zeros(i.size)
+            for jdx, j in enumerate(inputs):
+                if idx == jdx:
+                    continue
+                else:
+                    u = activations.relu(self.unary)
+                    dot = layers.dot([self.w_psi, self.w_phi], axes=1)
+                    self_attention += dot * u
+        f_prime.append(self.w_r * (self_attention / self.num_elements) + i)
+        return f_prime
+
 
     def compute_output_shape(self, input_shape):
         """Same shape as input"""
@@ -111,7 +133,8 @@ class Generator:
         generator.add(layers.BatchNormalization())
         generator.add(layers.Dense(feature_size * 2 * 2))
         generator.add(layers.BatchNormalization())
-        # TODO: Relation module.
+        # Relation module.
+        # TODO: Stack four relation modules when succeeded for one.
         generator.add(layers.Dense(feature_size * 2 * 2))
         generator.add(RelationModule(self.num_class, self.num_geometry_parameter, self.num_elements))
         # Decoder fully connected layers.
@@ -123,7 +146,7 @@ class Generator:
         generator.add(layers.Dense(self.num_class))
         generator.add(layers.Dense(self.num_geometry_parameter))
 
-        generator.summary()
+        print(generator.summary())
 
 
 class Discriminator:
@@ -139,10 +162,13 @@ class Discriminator:
 
 
 if __name__ == '__main__':
-    print(tf.keras.__version__)
-    # Load training data.
-    (train_images, train_labels), (test_images, test_labels) = datasets.mnist.load_data()
-    train_images = train_images.reshape((60000, 28, 28, 1))
-    vfunction = np.vectorize(transfer_greyscale_class)
-    layout_vector = vfunction(train_images, 200)
-    # print(layout_vector)
+    # # Load training data.
+    # (train_images, train_labels), (test_images, test_labels) = datasets.mnist.load_data()
+    # train_images = train_images.reshape((60000, 28, 28, 1))
+    # vfunction = np.vectorize(transfer_greyscale_class)
+    # layout_vector = vfunction(train_images, 200)
+    # # print(layout_vector)
+    
+    # Test establish the generator.
+    generator = Generator()
+    generator.build_generator()
