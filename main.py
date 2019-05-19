@@ -4,7 +4,11 @@ Use TensorFlow, TensorFlow-Graphics, and Keras
 TODO list:
 - [x] Create the generator.
 - [x] Create the relational discriminator.
-- [ ] Set up the loss function.
+- [ ] Set up training method.
+    - [ ] Set up the loss functions.
+    - [ ] Initialize the layouts, feed to the generator.
+    - [ ] Train the discriminator.
+    - [ ] Train the generator.
 - [ ] Run one epoch of training to test the code.
 
 Copyright ©2019-current, Junru Zhong, all rights reserved.
