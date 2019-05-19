@@ -17,7 +17,7 @@ import numpy as np
 
 # Modify the imports for IDE code completion.
 # Refer to https://github.com/tensorflow/tensorflow/issues/26813
-from tensorflow.python.keras import datasets, layers, models, activations
+from tensorflow.python.keras import datasets, layers, models, activations, optimizers
 from tensorflow.python.keras import backend as K
 
 
@@ -111,7 +111,7 @@ class RelationModule(layers.Layer):
         return input_shape
 
 
-class Generator:
+class LayoutGAN:
 
     def __init__(self):
         self.num_elements = 128
@@ -120,6 +120,21 @@ class Generator:
         self.beta2 = 1
         self.num_class = 2  # For MNIST
         self.num_geometry_parameter = 2  # For MNIST
+
+        # Set up optimizer.
+        self.optimizer = optimizers.Adam(self.learning_rate, self.beta1, self.beta2)
+
+        # TODO: Set up losses.
+        losses = [
+            'WeightedMSE'
+        ]
+
+        # Build the generator.
+        self.generator = self.build_generator()
+
+        # Build the discriminators.
+        self.relational_discriminator = self.build_relational_discriminator()
+        # self.wireframe_discriminator = self.build_wireframe_discriminator()
 
     def build_generator(self):
         feature_size = self.num_class + self.num_geometry_parameter
@@ -148,16 +163,7 @@ class Generator:
 
         print(generator.summary())
 
-
-class Discriminator:
-
-    def __init__(self):
-        self.num_elements = 128
-        self.learning_rate = 0.00002
-        self.beta1 = 1
-        self.beta2 = 1
-        self.num_class = 2  # For MNIST
-        self.num_geometry_parameter = 2  # For MNIST
+        return models.Model()
 
     def build_relational_discriminator(self):
         feature_size = self.num_class + self.num_geometry_parameter
@@ -190,22 +196,27 @@ class Discriminator:
 
         print(relational_discriminator.summary())
 
+        return models.Model()
+
     def build_wireframe_discriminator(self):
         pass
 
+    def train_relational_discriminator(self, epochs, batch_size=128):
+
+        # Load MNIST dataset.
+        (train_images, _), (_, _) = datasets.mnist.load_data()
+        train_images = train_images.reshape((60000, 28, 28, 1))
+        vfunction = np.vectorize(transfer_greyscale_class)
+        layout_vectors = vfunction(train_images, 200)
+
+        # TODO: Set up adversarial ground truth.
+
+        for epoch in range(epochs):
+
+            # Train discriminator
+            pass
+
 
 if __name__ == '__main__':
-    # # Load training data.
-    # (train_images, train_labels), (test_images, test_labels) = datasets.mnist.load_data()
-    # train_images = train_images.reshape((60000, 28, 28, 1))
-    # vfunction = np.vectorize(transfer_greyscale_class)
-    # layout_vector = vfunction(train_images, 200)
-    # # print(layout_vector)
-
-    # Test establish the generator.
-    generator = Generator()
-    generator.build_generator()
-
-    # Test establish the relational discriminator.
-    relational_discriminator = Discriminator()
-    relational_discriminator.build_relational_discriminator()
+    # Test network
+    layoutgan = LayoutGAN()
