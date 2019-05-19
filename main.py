@@ -3,7 +3,7 @@ Use TensorFlow, TensorFlow-Graphics, and Keras
 
 TODO list:
 - [x] Create the generator.
-- [ ] Create the relational discriminator.
+- [x] Create the relational discriminator.
 - [ ] Set up the loss function.
 - [ ] Run one epoch of training to test the code.
 
@@ -106,7 +106,6 @@ class RelationModule(layers.Layer):
         f_prime.append(self.w_r * (self_attention / self.num_elements) + i)
         return f_prime
 
-
     def compute_output_shape(self, input_shape):
         """Same shape as input"""
         return input_shape
@@ -129,19 +128,20 @@ class Generator:
         generator = models.Sequential()
 
         # Encoder fully connected layers.
-        generator.add(layers.Dense(feature_size * 2, input_shape=(feature_size,)))
+        generator.add(layers.Dense(feature_size * 2,
+                                   input_shape=(feature_size,)))
         generator.add(layers.BatchNormalization())
         generator.add(layers.Dense(feature_size * 2 * 2))
         generator.add(layers.BatchNormalization())
         # Relation module.
         # TODO: Stack four relation modules when succeeded for one.
         generator.add(layers.Dense(feature_size * 2 * 2))
-        generator.add(RelationModule(self.num_class, self.num_geometry_parameter, self.num_elements))
+        generator.add(RelationModule(self.num_class,
+                                     self.num_geometry_parameter, self.num_elements))
         # Decoder fully connected layers.
         generator.add(layers.Dense(feature_size * 2))
         generator.add(layers.BatchNormalization())
         generator.add(layers.Dense(feature_size))
-        generator.add(layers.BatchNormalization())
         # Branches
         generator.add(layers.Dense(self.num_class))
         generator.add(layers.Dense(self.num_geometry_parameter))
@@ -152,10 +152,43 @@ class Generator:
 class Discriminator:
 
     def __init__(self):
-        pass
+        self.num_elements = 128
+        self.learning_rate = 0.00002
+        self.beta1 = 1
+        self.beta2 = 1
+        self.num_class = 2  # For MNIST
+        self.num_geometry_parameter = 2  # For MNIST
 
     def build_relational_discriminator(self):
-        pass
+        feature_size = self.num_class + self.num_geometry_parameter
+
+        # The relational discriminator
+        relational_discriminator = models.Sequential()
+
+        # Encoder fully connected layers.
+        relational_discriminator.add(layers.Dense(
+            feature_size * 2, input_shape=(feature_size,)))
+        relational_discriminator.add(layers.BatchNormalization())
+        relational_discriminator.add(layers.Dense(feature_size * 2 * 2))
+        relational_discriminator.add(layers.BatchNormalization())
+        # Relation module.
+        # TODO: Stack four modules later.
+        relational_discriminator.add(layers.Dense(feature_size * 2 * 2))
+        relational_discriminator.add(RelationModule(
+            self.num_class, self.num_geometry_parameter, self.num_elements))
+        # Decoder fully connected layers.
+        relational_discriminator.add(layers.Dense(feature_size * 2))
+        relational_discriminator.add(layers.BatchNormalization())
+        relational_discriminator.add(layers.Dense(feature_size))
+        # Branches
+        relational_discriminator.add(layers.Dense(self.num_class))
+        relational_discriminator.add(layers.Dense(self.num_geometry_parameter))
+        # Max pooling
+        # relational_discriminator.add(layers.MaxPool1D(self.num_elements))
+        # Logits
+        # relational_discriminator.add(layers.Dense(feature_size, activations='logits'))
+
+        print(relational_discriminator.summary())
 
     def build_wireframe_discriminator(self):
         pass
@@ -168,7 +201,11 @@ if __name__ == '__main__':
     # vfunction = np.vectorize(transfer_greyscale_class)
     # layout_vector = vfunction(train_images, 200)
     # # print(layout_vector)
-    
+
     # Test establish the generator.
     generator = Generator()
     generator.build_generator()
+
+    # Test establish the relational discriminator.
+    relational_discriminator = Discriminator()
+    relational_discriminator.build_relational_discriminator()
