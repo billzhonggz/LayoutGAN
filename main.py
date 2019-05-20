@@ -127,11 +127,13 @@ class LayoutGAN:
         self.feature_size = self.num_class + self.num_geometry_parameter
 
         # Set up optimizer.
-        self.optimizer = optimizers.Adam(self.learning_rate, self.beta1, self.beta2)
+        self.optimizer = optimizers.Adam(
+            self.learning_rate, self.beta1, self.beta2)
 
         # Build the discriminators.
         self.relational_discriminator = self.build_relational_discriminator()
-        self.relational_discriminator.compile(optimizer=self.optimizer, loss='WeightedMSE')
+        self.relational_discriminator.compile(
+            optimizer=self.optimizer, loss='mean_squared_error')
         # self.wireframe_discriminator = self.build_wireframe_discriminator()
 
         # Build the generator.
@@ -200,7 +202,7 @@ class LayoutGAN:
     def build_wireframe_discriminator(self):
         pass
 
-    def train_relational_discriminator(self, epochs, batch_size=128):
+    def train_by_relational_discriminator(self, epochs, batch_size=128):
 
         # Load MNIST dataset.
         (train_images, _), (_, _) = datasets.mnist.load_data()
@@ -216,6 +218,18 @@ class LayoutGAN:
         for epoch in range(epochs):
 
             # Train discriminator
+
+            # Select a random batch of new images.
+            idx = np.random.randint(0, layout_vectors[0], batch_size)
+            imgs = layout_vectors[idx]
+
+            # TODO: Create the noise here (initialized by some distributions).
+            # Class probabilities are one-hot vector and randomly initialized.
+            # Geometry parameters are also randomly initialized.
+            # Stack these two vectors together.
+            # noise_class_probabilities = np.random.???
+            # noise_geometry_parameters = np.random.???
+
             pass
 
 
