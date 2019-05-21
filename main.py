@@ -224,8 +224,9 @@ class LayoutGAN:
             imgs = layout_vectors[idx]
 
             # TODO: Create the noise here (initialized by some distributions).
-            # Class probabilities are one-hot vector and randomly initialized.
-            # Geometry parameters are also randomly initialized.
+            # Class probabilities are randomly initialized.
+            # In MNIST case, there is only one class and all of the p_i are 1.
+            # Geometry parameters are also randomly initialized by normal distribution.
             # Stack these two vectors together.
             # noise_class_probabilities = np.random.???
             # noise_geometry_parameters = np.random.???
