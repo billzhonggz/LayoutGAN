@@ -122,7 +122,7 @@ class LayoutGAN:
         self.learning_rate = 0.00002
         self.beta1 = 1
         self.beta2 = 1
-        self.num_class = 2  # For MNIST
+        self.num_class = 1  # For MNIST, white only.
         self.num_geometry_parameter = 2  # For MNIST
         self.feature_size = self.num_class + self.num_geometry_parameter
 
@@ -205,6 +205,7 @@ class LayoutGAN:
     def train_by_relational_discriminator(self, epochs, batch_size=128):
 
         # Load MNIST dataset.
+        # TODO: Change to only distingush one class only.
         (train_images, _), (_, _) = datasets.mnist.load_data()
         train_images = train_images.reshape((60000, 28, 28, 1))
         vfunction = np.vectorize(transfer_greyscale_class)
@@ -226,11 +227,11 @@ class LayoutGAN:
             # TODO: Create the noise here (initialized by some distributions).
             # Class probabilities are randomly initialized.
             # In MNIST case, there is only one class and all of the p_i are 1.
+            noise_class_probabilities = np.ones((self.batch_size, self.num_class))
             # Geometry parameters are also randomly initialized by normal distribution.
-            # Stack these two vectors together.
-            # noise_class_probabilities = np.random.???
-            # noise_geometry_parameters = np.random.???
-
+            noise_geometry_parameters = np.random.normal(0, 1, size=(batch_size, num_geometry_parameter))
+            # Stack these two vectors together, feed to a Keras variable.
+            z = K.backend.variables(np.concatenate((noise_class_probabilities, noise_geometry_parameters), axis=1))
             pass
 
 
