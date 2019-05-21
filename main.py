@@ -21,7 +21,7 @@ import numpy as np
 
 # Modify the imports for IDE code completion.
 # Refer to https://github.com/tensorflow/tensorflow/issues/26813
-from tensorflow.python.keras import datasets, layers, models, activations, optimizers
+from tensorflow.python.keras import datasets, layers, models, activations, optimizers, Input
 from tensorflow.python.keras import backend as K
 
 
@@ -131,13 +131,26 @@ class LayoutGAN:
             self.learning_rate, self.beta1, self.beta2)
 
         # Build the discriminators.
-        self.relational_discriminator = self.build_relational_discriminator()
-        self.relational_discriminator.compile(
+        self.discriminator = self.build_relational_discriminator()
+        self.discriminator.compile(
             optimizer=self.optimizer, loss='mean_squared_error')
-        # self.wireframe_discriminator = self.build_wireframe_discriminator()
+        # self.discriminator = self.build_wireframe_discriminator()
 
         # Build the generator.
         self.generator = self.build_generator()
+
+        # The generator takes noise as input and generates layouts.
+        z = Input(shape=(self.feature_size,))
+        gen_layouts = self.generator(z)
+
+        # The discriminator takes the generated layouts as input and determines validity.
+        validity = self.discriminator(gen_layouts)
+
+        # The combined model  (stacked generator and discriminator)
+        # Trains the generator to fool the discriminator
+        self.combined = models.Model(z, validity)
+        self.combined.compile(optimizer=self.optimizer,
+                              loss='mean_squared_error')
 
     def build_generator(self):
 
@@ -165,7 +178,10 @@ class LayoutGAN:
 
         print(generator.summary())
 
-        return models.Model()
+        noise = Input(shape=(self.feature_size,))
+        layout = generator(noise)
+
+        return models.Model(noise, layout)
 
     def build_relational_discriminator(self):
 
@@ -197,7 +213,10 @@ class LayoutGAN:
 
         print(relational_discriminator.summary())
 
-        return models.Model()
+        layout = Input(shape=(self.feature_size,))
+        validity = relational_discriminator(layout)
+
+        return models.Model(layout, validity)
 
     def build_wireframe_discriminator(self):
         pass
@@ -211,30 +230,62 @@ class LayoutGAN:
         vfunction = np.vectorize(transfer_greyscale_class)
         layout_vectors = vfunction(train_images, 200)
 
-        # TODO: Set up placeholders for adversarial ground truth and fake result.
+        # Set up placeholders for adversarial ground truth and fake result.
         # Ground truth: the datasets; fake layouts: initialized according to the article.
         valid = np.ones((batch_size, self.feature_size))
         fake = np.zeros((batch_size, self.feature_size))
 
         for epoch in range(epochs):
 
+            # --------------------
             # Train discriminator
+            # --------------------
 
             # Select a random batch of new images.
+            # FIXME: TypeError: only size-1 arrays can be converted to Python scalars
             idx = np.random.randint(0, layout_vectors[0], batch_size)
-            imgs = layout_vectors[idx]
+            real_layouts = layout_vectors[idx]
 
-            # TODO: Create the noise here (initialized by some distributions).
+            # Create the noise here (initialized by some distributions).
             # Class probabilities are randomly initialized.
             # In MNIST case, there is only one class and all of the p_i are 1.
             noise_class_probabilities = np.ones((batch_size, self.num_class))
             # Geometry parameters are also randomly initialized by normal distribution.
-            noise_geometry_parameters = np.random.normal(0, 1, size=(batch_size, self.num_geometry_parameter))
+            noise_geometry_parameters = np.random.normal(
+                0, 1, size=(batch_size, self.num_geometry_parameter))
             # Stack these two vectors together, feed to a Keras variable.
-            z = K.backend.variables(np.concatenate((noise_class_probabilities, noise_geometry_parameters), axis=1))
-            pass
+            noise = np.concatenate(
+                (noise_class_probabilities, noise_geometry_parameters), axis=1)
+
+            # Generate a batch of new images
+            gen_layouts = self.generator.predict(noise)
+
+            # Do training of the discriminator
+            d_loss_real = self.discriminator.train_on_batch(
+                real_layouts, valid)
+            d_loss_fake = self.discriminator.train_on_batch(gen_layouts, fake)
+            d_loss = np.add(d_loss_real, d_loss_fake)
+
+            # --------------------
+            # Train generator
+            # --------------------
+
+            # Generate noise.
+            noise_class_probabilities = np.ones((batch_size, self.num_class))
+            noise_geometry_parameters = np.random.normal(
+                0, 1, size=(batch_size, self.num_geometry_parameter))
+            noise = np.concatenate(
+                (noise_class_probabilities, noise_geometry_parameters), axis=1)
+
+            # Do training of the generator.
+            g_loss = self.combined.train_on_batch(noise, valid)
+
+            # Plot the progress,
+            print("%d [D loss: %f, acc.: %.2f%%] [G loss: %f]" %
+                  (epoch, d_loss[0], 100*d_loss[1], g_loss))
 
 
 if __name__ == '__main__':
     # Test network
     layoutgan = LayoutGAN()
+    layoutgan.train_by_relational_discriminator(epochs=1, batch_size=128)
