@@ -227,9 +227,9 @@ class LayoutGAN:
             # TODO: Create the noise here (initialized by some distributions).
             # Class probabilities are randomly initialized.
             # In MNIST case, there is only one class and all of the p_i are 1.
-            noise_class_probabilities = np.ones((self.batch_size, self.num_class))
+            noise_class_probabilities = np.ones((batch_size, self.num_class))
             # Geometry parameters are also randomly initialized by normal distribution.
-            noise_geometry_parameters = np.random.normal(0, 1, size=(batch_size, num_geometry_parameter))
+            noise_geometry_parameters = np.random.normal(0, 1, size=(batch_size, self.num_geometry_parameter))
             # Stack these two vectors together, feed to a Keras variable.
             z = K.backend.variables(np.concatenate((noise_class_probabilities, noise_geometry_parameters), axis=1))
             pass
