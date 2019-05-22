@@ -14,16 +14,16 @@ TODO list:
 Copyright ©2019-current, Junru Zhong, all rights reserved.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 
-import tensorflow as tf
 import numpy as np
-
+import tensorflow as tf
 # Modify the imports for IDE code completion.
 # Refer to https://github.com/tensorflow/tensorflow/issues/26813
-from tensorflow.python.keras import datasets, layers, models, activations, optimizers, Input
+from tensorflow.python.keras import Input, activations
 from tensorflow.python.keras import backend as K
-
+from tensorflow.python.keras import datasets, layers, models, optimizers
 
 # Enable eager execution. Not necessary for TensorFlow 2.0+.
 # tf.enable_eager_execution()
