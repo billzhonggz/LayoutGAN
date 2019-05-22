@@ -99,6 +99,7 @@ class RelationModule(layers.Layer):
         # TODO: Verify the structure of input tensors.
         f_prime = []
         for idx, i in enumerate(inputs):
+            # FIXME: 'tensorflow.python.framework.ops.EagerTensor' object has no attribute 'size'
             self_attention = K.zeros(i.size)
             for jdx, j in enumerate(inputs):
                 if idx == jdx:
@@ -226,7 +227,7 @@ class LayoutGAN:
         # Load MNIST dataset.
         # TODO: Change to only distingush one class only.
         (train_images, _), (_, _) = datasets.mnist.load_data()
-        train_images = train_images.reshape((60000, 28, 28, 1))
+        # train_images = train_images.reshape((60000, 28, 28, 1))
         vfunction = np.vectorize(transfer_greyscale_class)
         layout_vectors = vfunction(train_images, 200)
 
@@ -242,8 +243,8 @@ class LayoutGAN:
             # --------------------
 
             # Select a random batch of new images.
-            # FIXME: TypeError: only size-1 arrays can be converted to Python scalars
-            idx = np.random.randint(0, layout_vectors[0], batch_size)
+            # FIXME: 60000 is the assumed maximum index value of the random batch.
+            idx = np.random.randint(0, 60000, batch_size)
             real_layouts = layout_vectors[idx]
 
             # Create the noise here (initialized by some distributions).
