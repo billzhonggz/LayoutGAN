@@ -26,7 +26,7 @@ from tensorflow.python.keras import backend as K
 from tensorflow.python.keras import datasets, layers, models, optimizers
 
 # Enable eager execution. Not necessary for TensorFlow 2.0+.
-# tf.enable_eager_execution()
+tf.enable_eager_execution()
 
 # def load_mnist(thresh=200):
 #     """This function loads the MNIST dataset from TensorFlow official Datasets."""
