@@ -193,12 +193,12 @@ class LayoutGAN:
                 if idx == jdx:
                     continue
                 u = layers.Dense(
-                    feature_size * 2 * 2, input_shape=feature_size * 2 * 2, activation='relu')(j)
+                    self.feature_size * 2 * 2, input_shape=self.feature_size * 2 * 2, activation='relu')(j)
                 i_reshape = np.reshape(i.size(), 1)
                 j_reshape = np.reshape(j.size(), 1)
                 dot = layers.dot([(i_reshape * psi).t(), j_reshape * phi])
                 self_attention += dot * u
-            f_prime.append(w_r * (self_attention / num_elements) + i)
+            f_prime.append(w_r * (self_attention / self.num_elements) + i)
         return f_prime
 
     def build_generator(self):
