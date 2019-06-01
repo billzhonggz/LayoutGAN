@@ -1,16 +1,6 @@
 """Just another implementation on LayoutGAN.
 Use TensorFlow, TensorFlow-Graphics, and Keras
 
-TODO list:
-- [x] Create the generator.
-- [x] Create the relational discriminator.
-- [x] Set up training method.
-    - [x] Set up the loss functions.
-    - [x] Initialize the layouts, feed to the generator.
-    - [x] Train the discriminator.
-    - [x] Train the generator.
-- [ ] Run one epoch of training to test the code.
-
 Copyright ©2019-current, Junru Zhong, all rights reserved.
 """
 
@@ -27,33 +17,6 @@ from tensorflow.python.keras import datasets, layers, models, optimizers
 
 # Enable eager execution. Not necessary for TensorFlow 2.0+.
 # tf.enable_eager_execution()
-
-# def load_mnist(thresh=200):
-#     """This function loads the MNIST dataset from TensorFlow official Datasets."""
-#     # Download from Google
-#     mnist_builder = tfds.builder('mnist')
-#     mnist_builder.download_and_prepare()
-#     # Transfer to TensorFlow `Dataset` object.
-#     datasets = mnist_builder.as_dataset()
-#     train_dataset = datasets['train']
-#     # print(isinstance(train_dataset, tf.data.Dataset))
-#     # Transfer MNIST images to tensors with geometry information in the iterator.
-#     iterator = tf.compat.v1.data.make_one_shot_iterator(train_dataset)
-#     # TODO: Find the API in r2.0 to feed iterable data to the model.
-#     # Get one element from the iterator.
-#     element = iterator.get_next()['image']
-#     # Pick the pixels (as a 2D numpy array).
-#     pixels = element.numpy()[:, :, 0]
-#     # For each image, the layout vector shape is exactly same as the image.
-#     # 0 -> black, 1 -> white.
-#     layout_vector = np.zeros((28, 28))
-#     for i in range(0, 28):
-#         for j in range(0, 28):
-#             if pixels[i, j] >= thresh:
-#                 layout_vector[i, j] = 1
-#             else:
-#                 layout_vector[i, j] = 0
-#     print(layout_vector)
 
 
 def transfer_greyscale_class(greyscale, thresh=200):
@@ -116,6 +79,12 @@ class RelationModule(layers.Layer):
                     continue
                 else:
                     u = self.unary
+                    """FIXME:
+                    tensorflow.python.framework.errors_impl.InvalidArgumentError: 
+                    indices[4] = -1 is not in [0, 3) [Op:ResourceGather] name: 
+                    model_1/sequential_1/relation_module_1/embedding/
+                    embedding_lookup/
+                    """
                     w_psi = layers.Embedding(self.feature_size, 1)(i)
                     w_phi = layers.Embedding(self.feature_size, 1)(j)
                     dot = layers.dot([w_psi, w_phi], 1)
@@ -165,41 +134,6 @@ class LayoutGAN:
         self.combined.compile(optimizer=self.optimizer,
                               loss='mean_squared_error')
 
-    # def relation_module(self, inputs):
-    #     """Relation module creates the residual of two elements.
-    #     The module here has a same shape of inputs and outputs.
-
-    #     inputs: encoded feature.
-
-    #     W_r: weight matrix creates linear embeddings and context residual information.
-    #     N: the number of elements.
-    #     W_psi: a representation of features of element i.
-    #     W_phi: a representation of features of element j.
-    #     U: an unary function computes a representation of the embedded feature for element j.
-    #     H: a dot-product to compute a scalar value on the representations of element i and j.
-
-    #     Output = W_r\frac{1}{N}\sum_{\forall{j \neq i}}^{} H(f(p_i,\theta_i),f(p_j,\theta_j))U(f(p_j,\theta_j))+f(p_i, \theta_i)
-    #     """
-    #     w_r = np.random.random_sample(1)
-    #     psi = np.random.random_sample(1)
-    #     phi = np.random.random_sample(1)
-    #     f_prime = []
-    #     # FIXME: Enable dynamic mode to iterate tensors.
-    #     # inputs = inputs.numpy()
-    #     for idx, i in enumerate(inputs):
-    #         self_attention = np.zeros(i.size())
-    #         for jdx, j in enumerate(inputs):
-    #             if idx == jdx:
-    #                 continue
-    #             u = layers.Dense(
-    #                 self.feature_size * 2 * 2, input_shape=self.feature_size * 2 * 2, activation='relu')(j)
-    #             i_reshape = np.reshape(i.size(), 1)
-    #             j_reshape = np.reshape(j.size(), 1)
-    #             dot = layers.dot([(i_reshape * psi).t(), j_reshape * phi], axes=1)
-    #             self_attention += dot * u
-    #         f_prime.append(w_r * (self_attention / self.num_elements) + i)
-    #     return f_prime
-
     def build_generator(self):
 
         # The generator
@@ -214,9 +148,10 @@ class LayoutGAN:
         # Relation module.
         # TODO: Stack four relation modules when succeeded for one.
         generator.add(layers.Dense(self.feature_size * 2 * 2))
-        generator.add(RelationModule(self.num_class, self.num_geometry_parameter, self.num_elements))
+        generator.add(RelationModule(self.num_class,
+                                     self.num_geometry_parameter, self.num_elements))
         # generator.add(layers.Lambda(self.relation_module,
-                                    # output_shape=(self.feature_size * 2 * 2,)))
+        # output_shape=(self.feature_size * 2 * 2,)))
         # Decoder fully connected layers.
         generator.add(layers.Dense(self.feature_size * 2))
         generator.add(layers.BatchNormalization())
@@ -246,9 +181,10 @@ class LayoutGAN:
         # Relation module.
         # TODO: Stack four modules later.
         relational_discriminator.add(layers.Dense(self.feature_size * 2 * 2))
-        relational_discriminator.add(RelationModule(self.num_class, self.num_geometry_parameter, self.num_elements))
+        relational_discriminator.add(RelationModule(
+            self.num_class, self.num_geometry_parameter, self.num_elements))
         # relational_discriminator.add(layers.Lambda(
-            # self.relation_module, output_shape=(self.feature_size * 2 * 2,)))
+        # self.relation_module, output_shape=(self.feature_size * 2 * 2,)))
         # Decoder fully connected layers.
         relational_discriminator.add(layers.Dense(self.feature_size * 2))
         relational_discriminator.add(layers.BatchNormalization())
