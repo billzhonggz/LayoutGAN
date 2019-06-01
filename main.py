@@ -15,6 +15,8 @@ from tensorflow.python.keras import Input, activations
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras import datasets, layers, models, optimizers
 
+# from RelationModule import relation_module
+
 # Enable eager execution. Not necessary for TensorFlow 2.0+.
 # tf.enable_eager_execution()
 
@@ -25,76 +27,6 @@ def transfer_greyscale_class(greyscale, thresh=200):
         return 1
     else:
         return 0
-
-
-class RelationModule(layers.Layer):
-    """Compute the relations between the elements.
-
-    The module here has a same shape of inputs and outputs.
-    W_r: weight matrix creates linear embeddings and context residual information.
-    N: the number of elements.
-    W_psi: a representation of features of element i.
-    W_phi: a representation of features of element j.
-    U: an unary function computes a representation of the embedded feature for element j.
-    H: a dot-product to compute a scalar value on the representations of element i and j.
-
-    Output = W_r\frac{1}{N}\sum_{\forall{j \neq i}}^{} H(f(p_i,\theta_i),f(p_j,\theta_j))U(f(p_j,\theta_j))+f(p_i, \theta_i)
-    """
-
-    def __init__(self, num_classes, num_geometry_parameters, num_elements):
-        """Layer variables
-        W_r: weight matrix creates linear embeddings and context residual information.
-        N: the number of elements.
-        W_psi: a representation of features of element i.
-        W_phi: a representation of features of element j.
-        """
-        self.num_classes = num_classes
-        self.num_geometry_parameters = num_geometry_parameters
-        self.num_elements = num_elements
-        self.feature_size = self.num_classes + self.num_geometry_parameters
-
-        self.w_r = K.placeholder(shape=[self.feature_size, self.feature_size])
-        # self.w_psi = layers.Dense(self.feature_size)
-        # self.w_phi = layers.Dense(self.feature_size)
-        self.unary = layers.Dense(self.feature_size, activation='relu')
-
-        super(RelationModule, self).__init__(dynamic=True)
-
-    # def build(self, input_shape):
-    #     # self.w_r = self.add_weight(name='w_r', shape='')
-    #     return super(RelationModule).build(input_shape)
-
-    def call(self, inputs, **kwargs):
-        """Forward computations
-        U: an unary function computes a representation of the embedded feature for element j.
-        H: a dot-product to compute a scalar value on the representations of element i and j.
-        Output = W_r\frac{1}{N}\sum_{\forall{j \neq i}}^{} H(f(p_i,\theta_i),f(p_j,\theta_j))U(f(p_j,\theta_j))+f(p_i, \theta_i)
-        """
-        # This calculation is for a single pair.
-        f_prime = []
-        for idx, i in enumerate(inputs):
-            self_attention = K.zeros(i.numpy().size)
-            for jdx, j in enumerate(inputs):
-                if idx == jdx:
-                    continue
-                else:
-                    u = self.unary
-                    """FIXME:
-                    tensorflow.python.framework.errors_impl.InvalidArgumentError: 
-                    indices[4] = -1 is not in [0, 3) [Op:ResourceGather] name: 
-                    model_1/sequential_1/relation_module_1/embedding/
-                    embedding_lookup/
-                    """
-                    w_psi = layers.Embedding(self.feature_size, 1)(i)
-                    w_phi = layers.Embedding(self.feature_size, 1)(j)
-                    dot = layers.dot([w_psi, w_phi], 1)
-                    self_attention += layers.multiply([dot, u])
-        f_prime.append(self.w_r * (self_attention / self.num_elements) + i)
-        return f_prime
-
-    def compute_output_shape(self, input_shape):
-        """Same shape as input"""
-        return input_shape
 
 
 class LayoutGAN:
@@ -134,6 +66,49 @@ class LayoutGAN:
         self.combined.compile(optimizer=self.optimizer,
                               loss='mean_squared_error')
 
+    def relation_module(self, inputs):
+        """Relation module creates the residual of two elements.
+
+        FIXME: Try to transfer this layer to dynamic, or avoid iterating tensors.
+
+        The module here has a same shape of inputs and outputs.
+
+        inputs: encoded feature.
+
+        W_r: weight matrix creates linear embeddings and context residual information.
+        N: the number of elements.
+        W_psi: a representation of features of element i.
+        W_phi: a representation of features of element j.
+        U: an unary function computes a representation of the embedded feature for element j.
+        H: a dot-product to compute a scalar value on the representations of element i and j.
+
+        Output = W_r\frac{1}{N}\sum_{\forall{j \neq i}}^{} H(f(p_i,\theta_i),f(p_j,\theta_j))U(f(p_j,\theta_j))+f(p_i, \theta_i)
+        """
+
+        # Create variables
+        w_r = np.random.random_sample(1)
+        psi = np.random.random_sample(1)
+        phi = np.random.random_sample(1)
+
+        batch_residual = []
+        for _, batch in enumerate(inputs):
+            f_prime = []
+            for idx, i in enumerate(batch):
+                self_attention = K.zeros(i.numpy().size)
+                for jdx, j in enumerate(batch):
+                    if idx == jdx:
+                        continue
+                    else:
+                        u = layers.Dense(self.feature_size, activation='relu')
+                        # TODO: How to do linear embeddings.
+                        w_psi = layers.Embedding(self.feature_size, 1)(i)
+                        w_phi = layers.Embedding(self.feature_size, 1)(j)
+                        dot = layers.dot([w_psi, w_phi], 1)
+                        self_attention += layers.multiply([dot, u])
+                f_prime.append(w_r * (self_attention / self.num_elements) + i)
+            batch_residual.append(f_prime)
+        return batch_residual
+
     def build_generator(self):
 
         # The generator
@@ -148,10 +123,8 @@ class LayoutGAN:
         # Relation module.
         # TODO: Stack four relation modules when succeeded for one.
         generator.add(layers.Dense(self.feature_size * 2 * 2))
-        generator.add(RelationModule(self.num_class,
-                                     self.num_geometry_parameter, self.num_elements))
-        # generator.add(layers.Lambda(self.relation_module,
-        # output_shape=(self.feature_size * 2 * 2,)))
+        # generator.add(RelationModule(self.num_class,self.num_geometry_parameter, self.num_elements))
+        generator.add(layers.Lambda(self.relation_module,output_shape=(self.feature_size * 2 * 2,)))
         # Decoder fully connected layers.
         generator.add(layers.Dense(self.feature_size * 2))
         generator.add(layers.BatchNormalization())
@@ -181,10 +154,8 @@ class LayoutGAN:
         # Relation module.
         # TODO: Stack four modules later.
         relational_discriminator.add(layers.Dense(self.feature_size * 2 * 2))
-        relational_discriminator.add(RelationModule(
-            self.num_class, self.num_geometry_parameter, self.num_elements))
-        # relational_discriminator.add(layers.Lambda(
-        # self.relation_module, output_shape=(self.feature_size * 2 * 2,)))
+        # relational_discriminator.add(RelationModule(self.num_class, self.num_geometry_parameter, self.num_elements))
+        relational_discriminator.add(layers.Lambda(self.relation_module, output_shape=(self.feature_size * 2 * 2,)))
         # Decoder fully connected layers.
         relational_discriminator.add(layers.Dense(self.feature_size * 2))
         relational_discriminator.add(layers.BatchNormalization())
