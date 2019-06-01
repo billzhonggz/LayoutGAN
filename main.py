@@ -60,22 +60,28 @@ class MnistLayoutDataset(torch.utils.data.Dataset):
 
 
 def real_loss(D_out, smooth=False):
-    """Loss function from the discriminator to the generator (when result is real)."""
+    """Loss function from the discriminator to the generator (when result is real).
+    TODO: Modify temp fix: fix element num.
+    FIXME: tensor sizes are different in generator/discriminator.
+    """
     labels = None
     batch_size = D_out.size(0)
     if smooth:
-        labels = torch.ones(batch_size) * 0.9
+        labels = torch.ones(batch_size, 128) * 0.9
     else:
-        labels = torch.ones(batch_size)
+        labels = torch.ones(batch_size, 128)
     crit = nn.BCEWithLogitsLoss()
     loss = crit(D_out.squeeze(), labels)
     return loss
 
 
 def fake_loss(D_out):
-    """Loss function from the discriminator to the generator (when result is fake)."""
+    """Loss function from the discriminator to the generator (when result is fake).
+    TODO: Modify temp fix: fix element num.
+    FIXME: tensor sizes are different in generator/discriminator.
+    """
     batch_size = D_out.size(0)
-    labels = torch.zeros(batch_size)
+    labels = torch.zeros(batch_size, 15)
     crit = nn.BCEWithLogitsLoss()
     loss = crit(D_out.squeeze(), labels)
     return loss
