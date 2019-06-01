@@ -110,18 +110,16 @@ class RelationModule(layers.Layer):
         # This calculation is for a single pair.
         f_prime = []
         for idx, i in enumerate(inputs):
-            # FIXME: 'tensorflow.python.framework.ops.EagerTensor' object has no attribute 'size'
             self_attention = K.zeros(i.numpy().size)
             for jdx, j in enumerate(inputs):
                 if idx == jdx:
                     continue
                 else:
                     u = self.unary
-                    # TODO: w_psi & w_phi, linear embeddings for f_i and f_j.
-                    w_psi = layers.Dense(self.feature_size)(i)
-                    w_phi = layers.Dense(self.feature_size)(j)
-                    dot = K.dot(w_psi, w_phi)
-                    self_attention += dot * u
+                    w_psi = layers.Embedding(self.feature_size, 1)(i)
+                    w_phi = layers.Embedding(self.feature_size, 1)(j)
+                    dot = layers.dot([w_psi, w_phi], 1)
+                    self_attention += layers.multiply([dot, u])
         f_prime.append(self.w_r * (self_attention / self.num_elements) + i)
         return f_prime
 
