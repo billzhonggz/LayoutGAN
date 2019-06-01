@@ -98,7 +98,7 @@ def train_mnist():
     device = torch.device("cuda:0" if (
         torch.cuda.is_available() and n_gpu > 0) else "cpu")
     # Batch size during training
-    batch_size = 15
+    batch_size = 5
     # Number of classes
     cls_num = 1
     # Number of geometry parameter
@@ -175,18 +175,22 @@ def train_mnist():
                 z = torch.Tensor(np.concatenate((cls_z, geo_z), axis=1))
                 zlist.append(z)
 
+            print('Generating fake images.')
             fake_images = generator(torch.stack(zlist))
+            print('Finish generating fake images.')
 
             # FIXME: The fake images has the element num equals to batch size.
             # Consider to extract "element_num" parameter to other places.
+            print('Discriminating fake images.')
             discriminator_fake = discriminator(fake_images)
             discriminator_fake_loss = fake_loss(discriminator_fake)
 
             discriminator_loss = discriminator_real_loss + discriminator_fake_loss
             discriminator_loss.backward()
             discriminator_optimizer.step()
+            print('Finish discriminating fake images.')
 
-            # Train generator
+            # Reset the generator.
             generator_optimizer.zero_grad()
 
             # TODO: Fix errors in random layout.
