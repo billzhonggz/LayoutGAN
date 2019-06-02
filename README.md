@@ -7,8 +7,9 @@ Check out my [testing notes](NOTES.md)!
 ## Todo
 
 - [x] Implement the LayoutGAN fully follow the reference repo.
-- [ ] Start training, obverse the result.
-- [ ] (New branch) Modify the network with **two classes** (black & white points) on MNIST dataset.
+- [x] Start training, obverse the result.
+- [ ] Fix bugs / temp code.
+- [ ] Add monitor, and start a formal train.
 
 ## Reference
 
