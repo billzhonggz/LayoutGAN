@@ -79,6 +79,7 @@ def real_images_loss(D_out, smooth=False):
     """Loss function from the discriminator to the generator (when result is real).
     TODO: Modify temp fix: fix element num.
     FIXME: tensor sizes are different in generator/discriminator.
+    D_out shape: [batch_size, element_num, 1]
     """
     labels = None
     batch_size = D_out.size(0)
@@ -95,6 +96,7 @@ def fake_loss(D_out):
     """Loss function from the discriminator to the generator (when result is fake).
     TODO: Modify temp fix: fix element num.
     FIXME: tensor sizes are different in generator/discriminator.
+    D_out shape: [batch_size, batch_size, 1]
     """
     batch_size = D_out.size(0)
     labels = torch.zeros(batch_size, batch_size)
