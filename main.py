@@ -144,10 +144,10 @@ def train_mnist():
     # Initialize the generator and discriminator.
     # element_num: 128 random points for each MNIST image.
     generator = models.Generator(
-        n_gpu, class_num=cls_num, element_num=128, feature_size=3).to(device).cuda()
+        n_gpu, class_num=cls_num, element_num=128, feature_size=3).to(device)
     # element_num: 128 random points for each MNIST image.
     discriminator = models.RelationDiscriminator(
-        n_gpu, class_num=cls_num, element_num=128, feature_size=3).to(device).cuda()
+        n_gpu, class_num=cls_num, element_num=128, feature_size=3).to(device)
     print(generator)  # Check information of the generator.
     print(discriminator)  # Check information of the discriminator.
 
@@ -237,5 +237,5 @@ def train_mnist():
 
 
 if __name__ == '__main__':
-    torch.set_default_tensor_type('torch.cuda.FloatTensor')
+    # torch.set_default_tensor_type('torch.cuda.FloatTensor')
     train_mnist()
