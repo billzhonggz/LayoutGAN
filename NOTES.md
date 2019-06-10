@@ -2,6 +2,13 @@
 
 Notes on testing the network.
 
+### June 10 2019 22:29 CST
+
+Commit `1d47db6d76cd20208822d38d4d10635d24f638af`
+
+- Fixed bugs on generating zlist.
+- Now the model seems *correct*.
+
 ### June 2 2019 14:09 CST
 
 Commit `c7702b48117fc874281656907ca6921a87d3a789`
