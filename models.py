@@ -51,9 +51,9 @@ class Generator(nn.Module):
 
         # Encoder: two fully connected layers, input layout Z.
         self.encoder_fc1 = nn.Linear(feature_size, feature_size * 2)  # Guessing? Why is a doubled size?
-        # self.encoder_batch_norm1 = nn.BatchNorm1d(element_num)
+        self.encoder_batch_norm1 = nn.BatchNorm1d(element_num)
         self.encoder_fc2 = nn.Linear(feature_size * 2, feature_size * 2 * 2)
-        # self.encoder_batch_norm2 = nn.BatchNorm1d(element_num)
+        self.encoder_batch_norm2 = nn.BatchNorm1d(element_num)
         self.encoder_fc3 = nn.Linear(feature_size * 2 * 2, feature_size * 2 * 2)
 
         # Relation model 1
@@ -86,7 +86,7 @@ class Generator(nn.Module):
 
         # Decoder, two fully connected layers.
         self.decoder_fc1 = nn.Linear(feature_size * 2 * 2, feature_size * 2)
-        # self.decoder_batch_norm1 = nn.BatchNorm1d(element_num)
+        self.decoder_batch_norm1 = nn.BatchNorm1d(element_num)
         self.decoder_fc2 = nn.Linear(feature_size * 2, feature_size)
 
         # Branch
@@ -95,10 +95,10 @@ class Generator(nn.Module):
 
     def forward(self, input):
         # Encoder
-        # out = F.relu(self.encoder_batch_norm1(self.encoder_fc1(input)))
-        # out = F.relu(self.encoder_batch_norm2(self.encoder_fc2(out)))
-        out = F.relu(self.encoder_fc1(input))
-        out = F.relu(self.encoder_fc2(out))
+        out = F.relu(self.encoder_batch_norm1(self.encoder_fc1(input)))
+        out = F.relu(self.encoder_batch_norm2(self.encoder_fc2(out)))
+        # out = F.relu(self.encoder_fc1(input))
+        # out = F.relu(self.encoder_fc2(out))
         encoded = torch.sigmoid(self.encoder_fc3(out))
 
         # Stacked relation module
@@ -112,8 +112,8 @@ class Generator(nn.Module):
                                               self.relation4_phi, self.relation4_wr)
 
         # Decoder
-        # out = F.relu(self.decoder_batch_norm1(self.decoder_fc1(relation_residual_4)))
-        out = F.relu(self.decoder_fc1(relation_residual_4))
+        out = F.relu(self.decoder_batch_norm1(self.decoder_fc1(relation_residual_4)))
+        # out = F.relu(self.decoder_fc1(relation_residual_4))
         out = F.relu(self.decoder_fc2(out))
 
         # Branch
@@ -140,9 +140,9 @@ class RelationDiscriminator(nn.Module):
 
         # Encoder: two fully connected layers, input layout Z.
         self.encoder_fc1 = nn.Linear(feature_size, feature_size * 2)  # Guessing? Why is a doubled size?
-        # self.encoder_batch_norm1 = nn.BatchNorm1d(element_num)
+        self.encoder_batch_norm1 = nn.BatchNorm1d(element_num)
         self.encoder_fc2 = nn.Linear(feature_size * 2, feature_size * 2 * 2)
-        # self.encoder_batch_norm2 = nn.BatchNorm1d(element_num)
+        self.encoder_batch_norm2 = nn.BatchNorm1d(element_num)
         self.encoder_fc3 = nn.Linear(feature_size * 2 * 2, feature_size * 2 * 2)
 
         # Relation model 1
@@ -175,7 +175,7 @@ class RelationDiscriminator(nn.Module):
 
         # Decoder, two fully connected layers.
         self.decoder_fc1 = nn.Linear(feature_size * 2 * 2, feature_size * 2)
-        # self.decoder_batch_norm1 = nn.BatchNorm1d(element_num)
+        self.decoder_batch_norm1 = nn.BatchNorm1d(element_num)
         self.decoder_fc2 = nn.Linear(feature_size * 2, feature_size)
 
         # Branch
@@ -190,10 +190,10 @@ class RelationDiscriminator(nn.Module):
 
     def forward(self, input):
         # Encoder
-        # out = F.relu(self.encoder_batch_norm1(self.encoder_fc1(input)))
-        # out = F.relu(self.encoder_batch_norm2(self.encoder_fc2(out)))
-        out = F.relu(self.encoder_fc1(input))
-        out = F.relu(self.encoder_fc2(out))
+        out = F.relu(self.encoder_batch_norm1(self.encoder_fc1(input)))
+        out = F.relu(self.encoder_batch_norm2(self.encoder_fc2(out)))
+        # out = F.relu(self.encoder_fc1(input))
+        # out = F.relu(self.encoder_fc2(out))
         encoded = torch.sigmoid(self.encoder_fc3(out))
 
         # Stacked relation module
@@ -207,8 +207,8 @@ class RelationDiscriminator(nn.Module):
                                               self.relation4_phi, self.relation4_wr)
 
         # Decoder
-        # out = F.relu(self.decoder_batch_norm1(self.decoder_fc1(relation_residual_4)))
-        out = F.relu(self.decoder_fc1(relation_residual_4))
+        out = F.relu(self.decoder_batch_norm1(self.decoder_fc1(relation_residual_4)))
+        # out = F.relu(self.decoder_fc1(relation_residual_4))
         out = F.relu(self.decoder_fc2(out))
 
         # Branch
