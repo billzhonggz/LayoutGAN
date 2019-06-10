@@ -42,8 +42,8 @@ class MnistLayoutDataset(torch.utils.data.Dataset):
                 # If the current grayscale value is larger than the threshold, note this point.
                 if j >= self.gt_thresh:
                     # Create the layout element.
-                    gt_values.append(torch.Tensor(
-                        [1, np.float32(2 * id + 1) / 56, np.float32(2 * jd + 1) / 56]))
+                    # Meaning of `np.float32(2 * id +1) /56`?
+                    gt_values.append(torch.Tensor([1, np.float32(2 * id + 1) / 56, np.float32(2 * jd + 1) / 56]))
 
         graph_elements = []
 
@@ -61,25 +61,6 @@ class MnistLayoutDataset(torch.utils.data.Dataset):
 
 def real_loss(D_out, smooth=False):
     """Loss function from the discriminator to the generator (when result is real).
-    TODO: Modify temp fix: fix element num.
-    FIXME: tensor sizes are different in generator/discriminator.
-    """
-    labels = None
-    batch_size = D_out.size(0)
-    if smooth:
-        labels = torch.ones(batch_size, batch_size) * 0.9
-    else:
-        labels = torch.ones(batch_size, batch_size)
-    crit = nn.BCEWithLogitsLoss()
-    loss = crit(D_out.squeeze(), labels)
-    return loss
-
-
-def real_images_loss(D_out, smooth=False):
-    """Loss function from the discriminator to the generator (when result is real).
-    TODO: Modify temp fix: fix element num.
-    FIXME: tensor sizes are different in generator/discriminator.
-    D_out shape: [batch_size, element_num, 1]
     """
     labels = None
     batch_size = D_out.size(0)
@@ -94,12 +75,9 @@ def real_images_loss(D_out, smooth=False):
 
 def fake_loss(D_out):
     """Loss function from the discriminator to the generator (when result is fake).
-    TODO: Modify temp fix: fix element num.
-    FIXME: tensor sizes are different in generator/discriminator.
-    D_out shape: [batch_size, batch_size, 1]
     """
     batch_size = D_out.size(0)
-    labels = torch.zeros(batch_size, batch_size)
+    labels = torch.zeros(batch_size, 128)
     crit = nn.BCEWithLogitsLoss()
     loss = crit(D_out.squeeze(), labels)
     return loss
@@ -114,7 +92,7 @@ def train_mnist():
     n_gpu = 1
     # GPU device
     device = torch.device("cuda:0" if (
-        torch.cuda.is_available() and n_gpu > 0) else "cpu")
+            torch.cuda.is_available() and n_gpu > 0) else "cpu")
     # Batch size during training
     batch_size = 5
     # Number of classes
@@ -144,10 +122,10 @@ def train_mnist():
     # Initialize the generator and discriminator.
     # element_num: 128 random points for each MNIST image.
     generator = models.Generator(
-        n_gpu, class_num=cls_num, element_num=128, feature_size=3).to(device).cuda()
+        n_gpu, class_num=cls_num, element_num=128, feature_size=3).to(device)
     # element_num: 128 random points for each MNIST image.
     discriminator = models.RelationDiscriminator(
-        n_gpu, class_num=cls_num, element_num=128, feature_size=3).to(device).cuda()
+        n_gpu, class_num=cls_num, element_num=128, feature_size=3).to(device)
     print(generator)  # Check information of the generator.
     print(discriminator)  # Check information of the discriminator.
 
@@ -158,11 +136,10 @@ def train_mnist():
     # Initialize optimizers for models.
     print('Initialize optimizers.')
     generator_optimizer = optim.Adam(generator.parameters(), learning_rate)
-    discriminator_optimizer = optim.Adam(
-        discriminator.parameters(), learning_rate)
+    discriminator_optimizer = optim.Adam(discriminator.parameters(), learning_rate)
 
     # Initialize training parameters.
-    print('Initialize traning.')
+    print('Initialize training.')
     generator.train()
     discriminator.train()
 
@@ -171,7 +148,7 @@ def train_mnist():
         print('Start to train epoch %d.' % epoch)
         for batch_i, real_images in enumerate(train_mnist_layout_loader):
 
-            print('In batch {0} of epoch {1}.'.format(batch_i, epoch))
+            print('In batch {0} of epoch {1}.'.format(batch_i + 1, epoch + 1))
 
             real_images = real_images.to(device)
             batch_size = real_images.size(0)
@@ -180,16 +157,16 @@ def train_mnist():
             discriminator_optimizer.zero_grad()
             print('Start train discriminator with real images.')
             discriminator_real = discriminator(real_images)
-            discriminator_real_loss = real_images_loss(discriminator_real, False)
+            discriminator_real_loss = real_loss(discriminator_real, False)
             print('Finish train discriminator with real images.')
 
-            # TODO: Fix errors in random layout.
             # Size of the zlist does not equal to element number.
             # Zlist size should be [batch_size, element_num, feature_size]
+            # Refer to real image size: [batch_size, element_num, cls + geo_info]
             zlist = []
             for i in range(batch_size):
-                cls_z = np.ones((batch_size, cls_num))
-                geo_z = np.random.normal(0, 1, size=(batch_size, geo_num))
+                cls_z = np.ones((128, cls_num))
+                geo_z = np.random.normal(0, 1, size=(128, geo_num))
 
                 z = torch.Tensor(np.concatenate((cls_z, geo_z), axis=1))
                 zlist.append(z)
@@ -197,26 +174,22 @@ def train_mnist():
             print('Generating fake images.')
             fake_images = generator(torch.stack(zlist))
             print('Finish generating fake images.')
-
-            # FIXME: The fake images has the element num equals to batch size.
-            # Consider to extract "element_num" parameter to other places.
             print('Discriminating fake images.')
             discriminator_fake = discriminator(fake_images)
-            discriminator_fake_loss = fake_loss(discriminator_fake)
             print('Calculating discriminator loss.')
+            discriminator_fake_loss = fake_loss(discriminator_fake)
             discriminator_loss = discriminator_real_loss + discriminator_fake_loss
+            print('Discriminator back propagation.')
             discriminator_loss.backward()
             discriminator_optimizer.step()
             print('Finish discriminating fake images.')
 
             # Reset the generator.
             generator_optimizer.zero_grad()
-
-            # TODO: Fix errors in random layout.
             zlist2 = []
             for i in range(batch_size):
-                cls_z = np.ones((batch_size, cls_num))
-                geo_z = np.random.normal(0, 1, size=(batch_size, geo_num))
+                cls_z = np.ones((128, cls_num))
+                geo_z = np.random.normal(0, 1, size=(128, geo_num))
 
                 z = torch.Tensor(np.concatenate((cls_z, geo_z), axis=1))
                 zlist2.append(z)
@@ -237,5 +210,6 @@ def train_mnist():
 
 
 if __name__ == '__main__':
+    # Enable this in CUDA environment.
     torch.set_default_tensor_type('torch.cuda.FloatTensor')
     train_mnist()
