@@ -42,8 +42,8 @@ class MnistLayoutDataset(torch.utils.data.Dataset):
                 # If the current grayscale value is larger than the threshold, note this point.
                 if j >= self.gt_thresh:
                     # Create the layout element.
-                    gt_values.append(torch.Tensor(
-                        [1, np.float32(2 * id + 1) / 56, np.float32(2 * jd + 1) / 56]))
+                    # TODO: Meaning of `np.float32(2 * id +1) /56`?
+                    gt_values.append(torch.Tensor([1, np.float32(2 * id + 1) / 56, np.float32(2 * jd + 1) / 56]))
 
         graph_elements = []
 
@@ -99,7 +99,7 @@ def fake_loss(D_out):
     D_out shape: [batch_size, batch_size, 1]
     """
     batch_size = D_out.size(0)
-    labels = torch.zeros(batch_size, batch_size)
+    labels = torch.zeros(batch_size, 128)
     crit = nn.BCEWithLogitsLoss()
     loss = crit(D_out.squeeze(), labels)
     return loss
@@ -114,7 +114,7 @@ def train_mnist():
     n_gpu = 1
     # GPU device
     device = torch.device("cuda:0" if (
-        torch.cuda.is_available() and n_gpu > 0) else "cpu")
+            torch.cuda.is_available() and n_gpu > 0) else "cpu")
     # Batch size during training
     batch_size = 5
     # Number of classes
@@ -158,11 +158,10 @@ def train_mnist():
     # Initialize optimizers for models.
     print('Initialize optimizers.')
     generator_optimizer = optim.Adam(generator.parameters(), learning_rate)
-    discriminator_optimizer = optim.Adam(
-        discriminator.parameters(), learning_rate)
+    discriminator_optimizer = optim.Adam(discriminator.parameters(), learning_rate)
 
     # Initialize training parameters.
-    print('Initialize traning.')
+    print('Initialize training.')
     generator.train()
     discriminator.train()
 
@@ -186,10 +185,11 @@ def train_mnist():
             # TODO: Fix errors in random layout.
             # Size of the zlist does not equal to element number.
             # Zlist size should be [batch_size, element_num, feature_size]
+            # Refer to real image size: [batch_size, element_num, cls + geo_info]
             zlist = []
             for i in range(batch_size):
-                cls_z = np.ones((batch_size, cls_num))
-                geo_z = np.random.normal(0, 1, size=(batch_size, geo_num))
+                cls_z = np.ones((128, cls_num))
+                geo_z = np.random.normal(0, 1, size=(128, geo_num))
 
                 z = torch.Tensor(np.concatenate((cls_z, geo_z), axis=1))
                 zlist.append(z)
@@ -215,8 +215,8 @@ def train_mnist():
             # TODO: Fix errors in random layout.
             zlist2 = []
             for i in range(batch_size):
-                cls_z = np.ones((batch_size, cls_num))
-                geo_z = np.random.normal(0, 1, size=(batch_size, geo_num))
+                cls_z = np.ones((128, cls_num))
+                geo_z = np.random.normal(0, 1, size=(128, geo_num))
 
                 z = torch.Tensor(np.concatenate((cls_z, geo_z), axis=1))
                 zlist2.append(z)
