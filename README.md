@@ -9,7 +9,7 @@ Check out my [testing notes](NOTES.md)!
 - [x] Implement the LayoutGAN fully follow the reference repo.
 - [x] Start training, obverse the result.
 - [x] Fix bugs / temp code.
-- [ ] Add monitor, and start a formal train.
+- [x] Add monitor, and start a formal train.
 
 ## Reference
 
