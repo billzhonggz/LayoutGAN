@@ -16,7 +16,7 @@ import torch.optim as optim
 import torch.utils.data
 import torchvision.datasets
 
-# from torch.utils.tensorboard import SummaryWriter
+from tensorboardX import SummaryWriter
 
 
 import models
@@ -83,7 +83,7 @@ def fake_loss(D_out):
     return loss
 
 
-def train_mnist(device):
+def train_mnist(device, writer):
     # Root directory for dataset.
     dataroot = "data"
     # Number of workers for dataloader
@@ -101,9 +101,6 @@ def train_mnist(device):
     # Beta1/2 hyperparameter for Adam optimizers (check the theory).
     beta1 = 1.0  # Not provided in the article.
     beta2 = 1.0
-
-    # TensorBoard
-    # writer = SummaryWriter()
 
     # Download MNIST dataset
     _ = torchvision.datasets.MNIST(
@@ -124,7 +121,7 @@ def train_mnist(device):
     print(generator)  # Check information of the generator.
     print(discriminator)  # Check information of the discriminator.
 
-    # Write models to TensorBoard
+    # Write models to TensorBoardX
     # writer.add_graph(generator)
     # writer.add_graph(discriminator)
 
@@ -198,6 +195,10 @@ def train_mnist(device):
             print('Calculating loss of the generator.')
             generator_loss = real_loss(discriminator_fake, False)
 
+            # Tensorboard save values.
+            writer.add_scalar('Discriminator Loss', discriminator_loss, epoch)
+            writer.add_scalar('Generator Loss', generator_loss, epoch)
+
             print('Epoch [{:5d}/{:5d}] | discriminator_loss: {:6.4f} | generator_loss: {:6.4f}'.format(epoch + 1,
                                                                                                        num_epochs,
                                                                                                        discriminator_loss.item(),
@@ -212,4 +213,7 @@ if __name__ == '__main__':
         torch.set_default_tensor_type('torch.cuda.FloatTensor')
     else:
         device = "cpu"
-    train_mnist(device)
+    # TensorBoardX: create writer
+    writer = SummaryWriter()
+    train_mnist(device, writer)
+    writer.close()
