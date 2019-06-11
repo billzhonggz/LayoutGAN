@@ -20,4 +20,5 @@ The implementation [here](https://github.com/sngjuk/LayoutGAN).
 You need to install these packages before you run this program.
 
 * Python 3.7
-* Pytorch >= 1.1.0 (TensorBoard enabled): [instructions](https://pytorch.org/get-started/)
+* Pytorch >= 1.0 [instructions](https://pytorch.org/get-started/locally/)
+* TensorBoardX
