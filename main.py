@@ -211,5 +211,5 @@ def train_mnist():
 
 if __name__ == '__main__':
     # Enable this in CUDA environment.
-    torch.set_default_tensor_type('torch.cuda.FloatTensor')
+    # torch.set_default_tensor_type('torch.cuda.FloatTensor')
     train_mnist()
