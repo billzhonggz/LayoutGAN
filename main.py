@@ -151,7 +151,7 @@ def train_mnist(device, writer):
             discriminator_real = discriminator(real_images)
             discriminator_real_loss = real_loss(discriminator_real, False)
             # TensorboardX
-            writer.add_scalar('Discriminator Loss', discriminator_real_loss, epoch)
+            writer.add_scalar('Discriminator Real Loss', discriminator_real_loss, epoch + batch_i)
             print('Finish train discriminator with real images.')
 
             # Size of the zlist does not equal to element number.
@@ -173,10 +173,10 @@ def train_mnist(device, writer):
             print('Calculating discriminator loss.')
             discriminator_fake_loss = fake_loss(discriminator_fake)
             # TensorboardX
-            writer.add_scalar('Discriminator Fake Loss', discriminator_fake_loss, epoch)
+            writer.add_scalar('Discriminator Fake Loss', discriminator_fake_loss, epoch + batch_i)
             discriminator_loss = discriminator_real_loss + discriminator_fake_loss
             # TensorboardX
-            writer.add_scalar('Discriminator Loss', discriminator_loss, epoch)
+            writer.add_scalar('Discriminator Total Loss', discriminator_loss, epoch + batch_i)
             print('Discriminator back propagation.')
             discriminator_loss.backward()
             discriminator_optimizer.step()
@@ -201,7 +201,7 @@ def train_mnist(device, writer):
             print('Calculating loss of the generator.')
             generator_loss = real_loss(discriminator_fake, False)
             # TensorboardX
-            writer.add_scalar('Generator Loss', generator_loss, epoch)
+            writer.add_scalar('Generator Loss', generator_loss, epoch + batch_i)
 
             print('Epoch [{:5d}/{:5d}] | discriminator_loss: {:6.4f} | generator_loss: {:6.4f}'.format(epoch + 1,
                                                                                                        num_epochs,
