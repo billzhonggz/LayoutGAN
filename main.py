@@ -83,16 +83,11 @@ def fake_loss(D_out):
     return loss
 
 
-def train_mnist():
+def train_mnist(device):
     # Root directory for dataset.
     dataroot = "data"
     # Number of workers for dataloader
     dataloader_workers = 8
-    # Number of GPUs available. Use 0 for CPU mode.
-    n_gpu = 1
-    # GPU device
-    device = torch.device("cuda:0" if (
-            torch.cuda.is_available() and n_gpu > 0) else "cpu")
     # Batch size during training
     batch_size = 5
     # Number of classes
@@ -211,5 +206,10 @@ def train_mnist():
 
 if __name__ == '__main__':
     # Enable this in CUDA environment.
-    # torch.set_default_tensor_type('torch.cuda.FloatTensor')
-    train_mnist()
+    n_gpu = 0  # Testing CPU mode.
+    if torch.cuda.is_available() and n_gpu > 0:
+        device = torch.device("cuda:0")
+        torch.set_default_tensor_type('torch.cuda.FloatTensor')
+    else:
+        device = "cpu"
+    train_mnist(device)
