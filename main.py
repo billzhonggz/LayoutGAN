@@ -6,8 +6,6 @@ Copyright ©2019-current, Junru Zhong, All rights reserved.
 """
 
 from __future__ import print_function
-import argparse
-import os
 import random
 import numpy as np
 import torch
@@ -16,8 +14,9 @@ import torch.optim as optim
 import torch.utils.data
 import torchvision.datasets
 
-from tensorboardX import SummaryWriter
+import matplotlib.pyplot as plt
 
+from tensorboardX import SummaryWriter
 
 import models
 
@@ -203,10 +202,22 @@ def train_mnist(device, writer):
             # TensorboardX
             writer.add_scalar('Generator Loss', generator_loss, epoch + batch_i)
 
-            print('Epoch [{:5d}/{:5d}] | discriminator_loss: {:6.4f} | generator_loss: {:6.4f}'.format(epoch + 1,
-                                                                                                       num_epochs,
-                                                                                                       discriminator_loss.item(),
-                                                                                                       generator_loss.item()))
+            # Generated image shape [batch_index, element_index, class + position]
+            # Transfer PyTorch tensor to numpy ndarray.
+            images = fake_images2.detach().numpy()
+            figures = []
+            for img_index in range(batch_size):
+                x = images[img_index][:][:, 1]
+                y = images[img_index][:][:, 2]
+                figure = plt.figure()
+                plt.scatter(x, y)
+                figures.append(figure)
+
+            # TensorBoardX
+            writer.add_figure('Generated Points', figures, epoch + batch_i)
+
+            print('Epoch [{:5d}/{:5d}] | discriminator_loss: {:6.4f} | generator_loss: {:6.4f}'.
+                  format(epoch + 1, num_epochs, discriminator_loss.item(), generator_loss.item()))
 
 
 if __name__ == '__main__':
