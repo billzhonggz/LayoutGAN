@@ -88,7 +88,7 @@ def train_mnist(device, writer):
     # Number of workers for dataloader
     dataloader_workers = 8
     # Batch size during training
-    batch_size = 5
+    batch_size = 4
     # Number of classes
     cls_num = 1
     # Number of geometry parameter
@@ -204,7 +204,10 @@ def train_mnist(device, writer):
 
             # Generated image shape [batch_index, element_index, class + position]
             # Transfer PyTorch tensor to numpy ndarray.
-            images = fake_images2.detach().numpy()
+            if device is not 'cpu':
+                images = fake_images2.cpu().detach().numpy()
+            else:
+                images = fake_images2.detach().numpy()
             figures = []
             for img_index in range(batch_size):
                 x = images[img_index][:][:, 1]
@@ -222,7 +225,7 @@ def train_mnist(device, writer):
 
 if __name__ == '__main__':
     # Enable this in CUDA environment.
-    n_gpu = 0  # Testing CPU mode.
+    n_gpu = 1  # Testing CPU mode.
     if torch.cuda.is_available() and n_gpu > 0:
         device = torch.device("cuda:0")
         torch.set_default_tensor_type('torch.cuda.FloatTensor')
