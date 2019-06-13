@@ -6,17 +6,18 @@ Copyright ©2019-current, Junru Zhong, All rights reserved.
 """
 
 from __future__ import print_function
+
 import random
+
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.utils.data
 import torchvision.datasets
-
-import matplotlib.pyplot as plt
-
 from tensorboardX import SummaryWriter
+from torch.utils.checkpoint import checkpoint
 
 import models
 
@@ -88,13 +89,13 @@ def train_mnist(device, writer):
     # Number of workers for dataloader
     dataloader_workers = 8
     # Batch size during training
-    batch_size = 4
+    batch_size = 2
     # Number of classes
     cls_num = 1
     # Number of geometry parameter
     geo_num = 2
     # Number of training epochs
-    num_epochs = 40  # Not provided in the article.
+    num_epochs = 1  # Not provided in the article.
     # Leaning rate for optimizers
     learning_rate = 0.00002
     # Beta1/2 hyperparameter for Adam optimizers (check the theory).
@@ -199,6 +200,11 @@ def train_mnist(device, writer):
 
             print('Calculating loss of the generator.')
             generator_loss = real_loss(discriminator_fake, False)
+
+            print('Generator back propagation.')
+            generator_loss.backward()
+            generator_optimizer.step()
+
             # TensorboardX
             writer.add_scalar('Generator Loss', generator_loss, epoch + batch_i)
 
