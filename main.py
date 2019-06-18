@@ -87,9 +87,9 @@ def train_mnist(device, writer):
     # Root directory for dataset.
     dataroot = "data"
     # Number of workers for dataloader
-    dataloader_workers = 8
+    dataloader_workers = 0
     # Batch size during training
-    batch_size = 2
+    batch_size = 20
     # Number of classes
     cls_num = 1
     # Number of geometry parameter
